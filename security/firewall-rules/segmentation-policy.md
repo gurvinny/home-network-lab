@@ -24,14 +24,14 @@ The network is segmented using **VLANs** with **firewall-enforced routing** and 
 
 ## 🌐 VLAN Roles
 
-| VLAN   | Network            | Purpose                               | Trust Level |
-| :----- | :----------------- | :------------------------------------ | :---------- |
-| **VLAN10** | `192.168.10.0/24`  | Trusted user devices (PC, Phone)      | **High**    |
-| **VLAN20** | `192.168.20.0/24`  | Network management & infrastructure   | **Critical**|
-| **VLAN30** | `192.168.30.0/24`  | Security lab & testing systems        | **Low**     |
-| **VLAN40** | `192.168.40.0/24`  | Servers and internal services         | **Medium**  |
-| **VLAN50** | `192.168.50.0/24`  | IoT and smart home devices            | **Untrusted**|
-| **VLAN60** | `192.168.60.0/24`  | Guest network access                  | **Untrusted**|
+| VLAN     | Network           | Purpose                               | Trust Level   |
+| :------- | :---------------- | :------------------------------------ | :------------ |
+| **VLAN10** | `192.168.10.0/24` | Trusted user devices (PC, Phone)      | **High**      |
+| **VLAN20** | `192.168.20.0/24` | Network management & infrastructure   | **Critical**  |
+| **VLAN30** | `192.168.30.0/24` | Security lab & testing systems        | **Low**       |
+| **VLAN40** | `192.168.40.0/24` | Servers and internal services         | **Medium**    |
+| **VLAN50** | `192.168.50.0/24` | IoT and smart home devices            | **Untrusted** |
+| **VLAN60** | `192.168.60.0/24` | Guest network access                  | **Untrusted** |
 
 ---
 
@@ -39,19 +39,19 @@ The network is segmented using **VLANs** with **firewall-enforced routing** and 
 
 This matrix defines the *default* behavior for inter-VLAN traffic.
 
-| Source      | Destination | Policy     | Rationale | Implementation |
-| :---------- | :---------- | :--------- | :-------- | :------------- |
-| **MAIN**    | **Internet**| ✅ Allowed | Standard access. | Allow Any (Default) |
-| **MAIN**    | **IoT**     | ✅ Allowed | Users control smart devices. | Allow Source MAIN Dest IoT |
-| **MAIN**    | **SERVERS** | ✅ Allowed | Access to file shares/Plex. | Allow Source MAIN Dest SERVERS |
-| **MAIN**    | **MGMT**    | ⚠️ Restricted| Admin access only. | Allow specific IPs/Ports only |
-| **IoT**     | **MAIN**    | ❌ Blocked | Prevent hacking of PCs. | Block Dest RFC1918 |
-| **IoT**     | **MGMT**    | ❌ Blocked | Protect infrastructure. | Block Dest RFC1918 |
-| **IoT**     | **Internet**| ✅ Allowed | Cloud connectivity. | Allow Dest !RFC1918 |
-| **LAB**     | **MAIN**    | ❌ Blocked | Contain malware. | Block Dest RFC1918 |
-| **GUEST**   | **Internal**| ❌ Blocked | Privacy & Security. | Block Dest RFC1918 |
+| Source    | Destination  | Policy         | Rationale                      | Implementation                 |
+| :-------- | :----------- | :------------- | :----------------------------- | :----------------------------- |
+| **MAIN**  | **Internet** | ✅ Allowed     | Standard access.               | Allow Any (Default)            |
+| **MAIN**  | **IoT**      | ✅ Allowed     | Users control smart devices.   | Allow Source MAIN Dest IoT     |
+| **MAIN**  | **SERVERS**  | ✅ Allowed     | Access to file shares/Plex.    | Allow Source MAIN Dest SERVERS |
+| **MAIN**  | **MGMT**     | ⚠️ Restricted  | Admin access only.             | Allow specific IPs/Ports only  |
+| **IoT**   | **MAIN**     | ❌ Blocked     | Prevent hacking of PCs.        | Block Dest RFC1918             |
+| **IoT**   | **MGMT**     | ❌ Blocked     | Protect infrastructure.        | Block Dest RFC1918             |
+| **IoT**   | **Internet** | ✅ Allowed     | Cloud connectivity.            | Allow Dest !RFC1918            |
+| **LAB**   | **MAIN**     | ❌ Blocked     | Contain malware.               | Block Dest RFC1918             |
+| **GUEST** | **Internal** | ❌ Blocked     | Privacy & Security.            | Block Dest RFC1918             |
 
-> **Note:** "Blocked" usually means explicitly blocking traffic to private IP ranges (RFC1918) while allowing everything else (Internet).
+> **Security Rationale:** "Blocked" usually means explicitly blocking traffic to private IP ranges (`RFC1918`) while allowing everything else (Internet).
 
 ---
 
@@ -67,7 +67,7 @@ The **Management VLAN (20)** is the "Crown Jewels" of the network.
     -   AP Controllers
     -   ESXi/Proxmox Management
 
-> **Why?** If an attacker gains access to this VLAN, they own the entire network infrastructure.
+> **Security Rationale:** If an attacker gains access to this VLAN, they own the entire network infrastructure. Strict access control prevents unauthorized device management.
 
 ---
 
@@ -88,7 +88,7 @@ IoT devices are notoriously insecure. They are treated as **hostile** by default
 -   **Internet Access:** Unrestricted HTTP/HTTPS.
 -   **Bandwidth Limit:** Capped at 50/10 Mbps.
 -   **Internal Access:** Hard block to `192.168.0.0/16`, `10.0.0.0/8`, `172.16.0.0/12`.
--   **DNS:** Forced to use Public DNS (e.g., 1.1.1.1) to prevent internal hostname resolution.
+-   **DNS:** Forced to use Public DNS (e.g., `1.1.1.1`) to prevent internal hostname resolution.
 
 ---
 
