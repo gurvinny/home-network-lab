@@ -33,7 +33,7 @@ flowchart TB
     subgraph Security_Zones ["Defined Security Zones"]
         direction TB
 
-        subgraph Trusted_Zone ["Trusted Zone (Allow Outbound)"]
+        subgraph Trusted_Zone ["Trusted Zone"]
             direction LR
             VLAN10["VLAN 10: Main"]:::trusted
             VLAN40["VLAN 40: Servers"]:::trusted
