@@ -40,13 +40,13 @@ flowchart TB
             VLAN20["VLAN 20: Management"]:::trusted
         end
 
-        subgraph Untrusted_Zone ["Untrusted Zone (Strict Containment)"]
+        subgraph Untrusted_Zone ["Untrusted Zone"]
             direction LR
             VLAN50["VLAN 50: IoT"]:::untrusted
             VLAN60["VLAN 60: Guest"]:::untrusted
         end
 
-        subgraph Isolated_Zone ["Isolated Zone (Lab / Detonation)"]
+        subgraph Isolated_Zone ["Isolated Zone"]
             direction LR
             VLAN30["VLAN 30: Lab"]:::isolated
         end
