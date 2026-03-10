@@ -29,17 +29,14 @@ This lab implements full **VLAN segmentation** with firewall-enforced isolation 
 
 ```mermaid
 graph TD
-    %% Styling
-    classDef hardware fill:#f9f,stroke:#333,stroke-width:2px,color:black;
-    classDef cloud fill:#bbf,stroke:#333,stroke-width:2px,color:black;
+    %% Cyber Sec Grey/Blue Theme Styling
+    classDef hardware fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
+    classDef cloud fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
 
-    ISP["ISP Fiber Connection (5Gb)"] -->|WAN| FW["pfSense Firewall"]
-    FW -->|10Gb SFP+ DAC/Fiber| SW["MokerLink 10G Switch"]
-    SW -->|VLAN Tagged| VLANs["Segmented VLAN Networks"]
-    VLANs --> Clients["Access Points / Servers / Clients"]
-
-    class ISP cloud;
-    class FW,SW,VLANs hardware;
+    ISP["ISP Fiber Connection (5Gb)"]:::cloud -->|"WAN"| FW["pfSense Firewall"]:::hardware
+    FW -->|"10Gb SFP+ DAC/Fiber"| SW["MokerLink 10G Switch"]:::hardware
+    SW -->|"VLAN Tagged"| VLANs["Segmented VLAN Networks"]:::hardware
+    VLANs -->|"Trunk / Access"| Clients["Access Points / Servers / Clients"]:::hardware
 ```
 
 **Core Technologies:**
@@ -87,65 +84,71 @@ graph TD
 
 ```mermaid
 flowchart TB
-    %% Styling
-    classDef internet fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:black;
-    classDef firewall fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:black;
-    classDef switch fill:#e0f2f1,stroke:#00695c,stroke-width:2px,color:black;
-    classDef vlan fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px,stroke-dasharray: 5 5,color:black;
-    classDef device fill:#ffffff,stroke:#333,stroke-width:1px,color:black;
+    %% Cyber Sec Grey/Blue Theme Styling
+    classDef internet fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
+    classDef firewall fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
+    classDef switch fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
+    classDef vlan fill:#1e293b,stroke:#3b82f6,stroke-width:2px,stroke-dasharray: 3 3,color:#ffffff;
+    classDef device fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
+    classDef zone fill:#00000000,stroke:#00d2ff,stroke-width:2px,color:#00d2ff,stroke-dasharray: 5 5;
 
-    Internet((Internet)):::internet -->|WAN| pfSense["pfSense Firewall<br>(Atom C3758)"]:::firewall
-    pfSense -->|10Gb SFP+ Trunk| Switch["MokerLink 10G Switch"]:::switch
+    Internet["Internet"]:::internet -->|"WAN"| pfSense["pfSense Firewall (Atom C3758)"]:::firewall
+    pfSense -->|"10Gb SFP+ Trunk"| Switch["MokerLink 10G Switch"]:::switch
 
-    subgraph Infrastructure [VLAN 20: Management]
+    subgraph Infrastructure ["VLAN 20: Management"]
         direction TB
         pfSense
         Switch
     end
+    class Infrastructure vlan;
 
-    subgraph Trusted_Zone [Trusted Zone]
+    subgraph Trusted_Zone ["Trusted Zone"]
         direction TB
-        subgraph VLAN10 [VLAN 10: Main]
+        subgraph VLAN10 ["VLAN 10: Main"]
             direction LR
-            PC1[PC1]:::device
+            PC1["PC1"]:::device
             Deco["Deco Mesh AP"]:::device
         end
+        class VLAN10 vlan;
         
-        subgraph VLAN40 [VLAN 40: Servers]
+        subgraph VLAN40 ["VLAN 40: Servers"]
             direction LR
-            NAS[NAS]:::device
+            NAS["NAS"]:::device
             Srv["Game Servers"]:::device
         end
+        class VLAN40 vlan;
     end
+    class Trusted_Zone zone;
 
-    subgraph Untrusted_Zone [Untrusted Zone]
+    subgraph Untrusted_Zone ["Untrusted Zone"]
         direction TB
-        subgraph VLAN50 [VLAN 50: IoT]
+        subgraph VLAN50 ["VLAN 50: IoT"]
             direction LR
             IoT_AP["AX6000 Wi-Fi Router"]:::device
-            TV[Smart TVs]:::device
-            Prn[Printer]:::device
+            TV["Smart TVs"]:::device
+            Prn["Printer"]:::device
             Smart["Smart Home Devices"]:::device
         end
+        class VLAN50 vlan;
 
-        subgraph VLAN60 [VLAN 60: Guest]
+        subgraph VLAN60 ["VLAN 60: Guest"]
             direction LR
             Gst["Guest Devices"]:::device
         end
+        class VLAN60 vlan;
     end
+    class Untrusted_Zone zone;
     
     %% Physical Connections
-    Switch -->|SFP+ 10G| PC1
-    Switch -->|RJ45 1G| Deco
-    Switch -->|SFP+ 10G| NAS
-    Switch -->|RJ45 1G| IoT_AP
+    Switch -->|"SFP+ 10G"| PC1
+    Switch -->|"RJ45 1G"| Deco
+    Switch -->|"SFP+ 10G"| NAS
+    Switch -->|"RJ45 1G"| IoT_AP
 
     %% Logical Connections
-    IoT_AP -.->|Wi-Fi| TV
-    IoT_AP -.->|Wi-Fi| Prn
-    IoT_AP -.->|Wi-Fi| Smart
-
-    class VLAN10,VLAN20,VLAN40,VLAN50,VLAN60 vlan;
+    IoT_AP -.->|"Wi-Fi"| TV
+    IoT_AP -.->|"Wi-Fi"| Prn
+    IoT_AP -.->|"Wi-Fi"| Smart
 ```
 
 ---
@@ -178,7 +181,7 @@ Traffic policies enforce strict segmentation based on the principle of least pri
 | **GUEST** | **Internal** | ❌ Blocked | Guests get internet only, no snooping. |
 | **All** | **WAN** | ✅ Allowed | Internet access for all devices. |
 
-> **Why this matters:** In a flat network (192.168.1.x), a compromised smart TV allows an attacker to directly scan and exploit your personal laptop. In this segmented model, the attacker is trapped in VLAN50.
+> **Security Rationale:** In a flat network (`192.168.1.x`), a compromised smart TV allows an attacker to directly scan and exploit your personal laptop. In this segmented model, the attacker is trapped in VLAN50, unable to reach the Trusted Zone or Management Plane.
 
 ---
 
@@ -210,10 +213,16 @@ This environment supports a wide range of security experiments:
 
 ```text
 home-network-lab/
-├── firewall-rules/
-│   └── segmentation-policy.md
-├── switch-config/
-│   └── vlan-setup.md
+├── network-core/
+│   └── switch-config/
+│       └── vlan-setup.md
+├── security/
+│   ├── adblockers/
+│   │   └── README.md
+│   ├── firewall-rules/
+│   │   └── segmentation-policy.md
+│   └── ids-ips/
+│       └── README.md
 └── README.md
 ```
 
@@ -242,6 +251,7 @@ Planned improvements for the lab:
 -   [ ] **Automated Backups:** Ansible playbooks for config management.
 -   [ ] **Attack Simulation:** Automated red team scenarios.
 -   [ ] **Zero-Trust:** Experimenting with micro-segmentation.
+-   [ ] **Adblockers:** Deployment of pfBlockerNG / Pi-hole for DNS filtering.
 
 ---
 
