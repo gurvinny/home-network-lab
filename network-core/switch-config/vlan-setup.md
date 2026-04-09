@@ -17,23 +17,23 @@ The **edge firewall** performs inter-VLAN routing (Layer 3) and firewall enforce
 ```mermaid
 graph TB
     %% Cyber Sec Grey/Blue Theme
+    classDef internet fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
     classDef firewall fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
-    classDef switch fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
-    classDef endpoint fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
+    classDef device fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
     classDef zone fill:#00000000,stroke:#00d2ff,stroke-width:2px,color:#00d2ff,stroke-dasharray: 5 5;
 
-    ISP["ISP Modem"]:::endpoint -->|"WAN"| FW["Edge Firewall"]:::firewall
-    FW -->|"Port 1: Trunk (All VLANs)"| SW["Core Switch"]:::switch
+    ISP["ISP Modem"]:::internet -->|"WAN"| FW["Edge Firewall"]:::firewall
+    FW -->|"Port 1: Trunk (All VLANs)"| SW["Core Switch"]:::firewall
 
     subgraph Port_Assignments ["Switch Port Assignments"]
         direction TB
-        SW -->|"Port 2: Access (VLAN 20)"| MgmtHost["Management Host"]:::endpoint
-        SW -->|"Port 3: Access (VLAN 10)"| TrustedHost1["Trusted Host A"]:::endpoint
-        SW -->|"Port 4: Access (VLAN 10)"| TrustedHost2["Trusted Host B"]:::endpoint
-        SW -->|"Port 5: Access (VLAN 40)"| FileServer["File Server"]:::endpoint
-        SW -->|"Port 6: Access (VLAN 30)"| LabEndpoint["Lab Endpoint"]:::endpoint
-        SW -->|"Port 7: Trunk (VLAN 50, 60)"| SegmentedAP["Segmented AP (IoT/Guest)"]:::endpoint
-        SW -->|"Port 8: Trunk (VLAN 10)"| TrustedAP["Trusted AP"]:::endpoint
+        SW -->|"Port 2: Access (VLAN 20)"| MgmtHost["Management Host"]:::device
+        SW -->|"Port 3: Access (VLAN 10)"| TrustedHost1["Trusted Host A"]:::device
+        SW -->|"Port 4: Access (VLAN 10)"| TrustedHost2["Trusted Host B"]:::device
+        SW -->|"Port 5: Access (VLAN 40)"| FileServer["File Server"]:::device
+        SW -->|"Port 6: Access (VLAN 30)"| LabEndpoint["Lab Endpoint"]:::device
+        SW -->|"Port 7: Trunk (VLAN 50, 60)"| SegmentedAP["Segmented AP (IoT/Guest)"]:::device
+        SW -->|"Port 8: Trunk (VLAN 10)"| TrustedAP["Trusted AP"]:::device
     end
     class Port_Assignments zone;
 ```

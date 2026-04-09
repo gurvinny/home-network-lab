@@ -22,7 +22,7 @@ The core model is **VLAN segmentation with default-deny inter-zone routing**. De
 flowchart TB
     %% Cyber Sec Grey/Blue Theme
     classDef firewall fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
-    classDef zone fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
+    classDef zone fill:#00000000,stroke:#00d2ff,stroke-width:2px,color:#00d2ff,stroke-dasharray: 5 5;
     classDef trusted fill:#1e293b,stroke:#10b981,stroke-width:2px,color:#ffffff;
     classDef untrusted fill:#1e293b,stroke:#ef4444,stroke-width:2px,color:#ffffff;
     classDef isolated fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#ffffff;
