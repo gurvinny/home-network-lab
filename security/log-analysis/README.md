@@ -1,145 +1,113 @@
 ![Category](https://img.shields.io/badge/Category-Log%20Analysis-blue)
-![Enforcement](https://img.shields.io/badge/Enforcement-pfSense%20Firewall-orange)
+![Platform](https://img.shields.io/badge/Platform-pfSense%20Plus-2ea043)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 
-# 📈 Firewall Log Analysis
+# Log Analysis
 
-## 📌 Overview
-
-This document presents a real-world analysis of pfSense firewall logs collected within the Home Network Security Lab environment. It demonstrates how logs can be parsed, analyzed, and used to identify reconnaissance attempts, internal noise, and refine firewall rulesets.
+Firewall log analysis is a foundational SOC skill. This directory documents the methodology used to parse, classify, and act on pfSense firewall logs in this lab — and contains real-world analysis reports generated from captured traffic.
 
 ---
 
-## 📜 Log Format Explanation
+## Overview
 
-pfSense outputs its firewall logs using the **RFC 5424 syslog format** via the `filterlog` facility. The payload of the log message is a comma-separated list of fields that detail the network traffic event.
+pfSense outputs structured firewall logs via the `filterlog` facility using RFC 5424 syslog format. These logs capture every rule match — both allowed and denied traffic — across all interfaces and VLANs. Analysing these logs reveals reconnaissance attempts, internal device noise, and opportunities to refine firewall policy.
 
-A typical `filterlog` entry contains the following key fields (among others):
-1.  **Rule Number:** The ID of the firewall rule that triggered the log.
-2.  **Interface:** The interface where the traffic was seen (e.g., `ix1` for WAN, `ix0.50` for VLAN50).
-3.  **Action:** Whether the traffic was `pass` or `block`.
-4.  **Direction:** `in` or `out`.
-5.  **IP Version:** `4` for IPv4, `6` for IPv6.
-6.  **Protocol:** e.g., `tcp`, `udp`, `gre`, `icmp`.
-7.  **Source IP:** The originating IP address.
-8.  **Destination IP:** The target IP address.
-9.  **Source Port:** The originating port (for TCP/UDP).
-10. **Destination Port:** The target port (for TCP/UDP).
-11. **TCP Flags:** If applicable (e.g., `S` for SYN).
+> **SOC Relevance:** Firewall logs are a primary data source in any SOC environment. The ability to parse log format, distinguish signal from noise, and tune rules for SIEM ingestion directly mirrors Tier 1 analyst responsibilities.
 
 ---
 
-## 🕵️‍♂️ Redacted Sample Log Data
+## Log Format Explained
 
-> **Note:** The public WAN IP has been redacted and replaced with `[REDACTED_WAN_IP]` in all log samples below. Internal RFC 1918 addresses and reserved local domains (like `.home.arpa`) are displayed as they are inherently non-routable.
+pfSense `filterlog` entries use the RFC 5424 syslog envelope with a comma-separated payload:
 
-### Reconnaissance: Inbound Port Scan (TCP SYN to VNC port 5900)
-```text
-<134>1 2026-04-08T17:41:33-04:00 edgefw.core.home.arpa filterlog - - -
-  1,6,,1000000103,ix1,match,block,in,4,0x0,,114,24337,0,none,6,tcp,48,
-  165.245.162.235,[REDACTED_WAN_IP],5949,5900,0,S,1484833334,,65535,,mss;nop;nop;sackOK
+```
+<priority>version timestamp hostname appname procid msgid - payload
 ```
 
-### Reconnaissance: Telnet Scan (port 23) — duplicate SYN packets from same source
-```text
-<134>1 2026-04-08T17:42:54-04:00 edgefw.core.home.arpa filterlog - - -
-  1,6,,1000000103,ix1,match,block,in,4,0x0,,40,10980,0,none,6,tcp,40,
-  180.163.62.126,[REDACTED_WAN_IP],56339,23,0,S,1165667900,,65535,,
+**Key fields in the `filterlog` payload:**
 
-<134>1 2026-04-08T17:42:54-04:00 edgefw.core.home.arpa filterlog - - -
-  1,6,,1000000103,ix1,match,block,in,4,0x0,,40,10980,0,none,6,tcp,40,
-  180.163.62.126,[REDACTED_WAN_IP],56339,23,0,S,1165667900,,65535,,
-```
-
-### Reconnaissance: SNMP Enumeration Attempt (UDP port 161)
-```text
-<134>1 2026-04-08T17:42:34-04:00 edgefw.core.home.arpa filterlog - - -
-  1,6,,1000000103,ix1,match,block,in,4,0x0,,53,9386,0,DF,17,udp,71,
-  193.163.125.127,[REDACTED_WAN_IP],23052,161,51
-```
-
-### Suspicious: GRE Tunnel Probe (Unusual Protocol Scan)
-```text
-<134>1 2026-04-08T17:43:10-04:00 edgefw.core.home.arpa filterlog - - -
-  1,6,,1000000103,ix1,match,block,in,4,0x0,,54,5245,0,DF,47,gre,564,
-  84.54.149.97,[REDACTED_WAN_IP],datalength=544
-```
-
-### Reconnaissance: MongoDB Scan (Targeting Exposed Databases)
-```text
-<134>1 2026-04-08T23:21:16-04:00 edgefw.core.home.arpa filterlog - - -
-  1,6,,1000000103,ix1,match,block,in,4,0x0,,239,54359,0,none,6,tcp,44,
-  43.228.157.45,[REDACTED_WAN_IP],44878,27017,0,S,4194725836,,1025,,mss
-```
-
-### Internal Noise: Samsung TV Discovery Broadcast (UDP 15600)
-*This is the exact traffic that prompted the creation of the `SOC_SILENCE_SAMSUNG_DISCOVERY` rule.*
-```text
-<134>1 2026-04-08T23:20:10-04:00 edgefw.core.home.arpa filterlog - - -
-  1,176,,1770416543,ix0.50,match,block,in,4,0x0,,64,63329,0,DF,17,udp,63,
-  192.168.50.101,192.168.50.255,34728,15600,43
-```
-
-### Normal Traffic: Internal DNS Pass
-```text
-<134>1 2026-04-08T17:41:16-04:00 edgefw.core.home.arpa filterlog - - -
-  1,168,,1775611791,ix0.50,match,pass,in,4,0x0,,64,33907,0,DF,17,udp,76,
-  192.168.50.32,127.0.0.1,56603,53,56
-```
+| Field | Description | Example |
+| :--- | :--- | :--- |
+| Rule Number | ID of the firewall rule that matched | `1000000103` |
+| Interface | Interface where traffic was observed | `ix1` (WAN), `ix0.50` (VLAN50) |
+| Action | Firewall decision | `block`, `pass` |
+| Direction | Traffic flow | `in`, `out` |
+| IP Version | Address family | `4` (IPv4), `6` (IPv6) |
+| Protocol | Layer 4 protocol | `tcp`, `udp`, `gre`, `icmp` |
+| Source IP | Originating address | External or internal IP |
+| Destination IP | Target address | WAN IP or internal subnet |
+| Source Port | Originating port (TCP/UDP) | `56339` |
+| Destination Port | Target port (TCP/UDP) | `23` |
+| TCP Flags | Connection state indicators | `S` (SYN), `SA` (SYN-ACK) |
 
 ---
 
-## 📊 Traffic Analysis Summary
+## Analysis Methodology
 
-Over a ~5.5-hour capture window (17:41–23:22 UTC-4), approximately 2,850 log entries were recorded. The following insights were derived from this dataset:
+The approach used for each analysis cycle:
 
-### Reconnaissance Patterns Observed
-- All blocked TCP entries carry the `S` (SYN) flag, indicating connection initiation attempts rather than established traffic.
-- Targeted ports frequently included: `23` (Telnet), `161` (SNMP), `5900` (VNC), `5985` (WinRM), `8443`, `8728` (MikroTik API), `27017` (MongoDB), and `7474` (Neo4j).
-- These patterns represent automated internet-wide scanners and botnets relentlessly probing for exposed, vulnerable services.
-
-### Repeat Offender Netblocks
-- `85.217.149.x` — Appeared repeatedly hitting random high ports (likely a scanning cluster).
-- `193.46.255.x`, `193.163.125.x` — Multiple hits on common service ports.
-- `198.235.24.x`, `147.185.132.x`, `35.203.210.x` — Persistent repeat SYN scanners.
-- *In a production SOC, these IPs would be enriched and cross-referenced with threat intelligence feeds such as AbuseIPDB, VirusTotal, or OTX AlienVault.*
-
-### Interesting Targeted Ports Table
-
-| Port | Service | Why Attackers Target It |
-|------|---------|------------------------|
-| 23 | Telnet | Unencrypted remote shell, often has default credentials on IoT devices. |
-| 161 | SNMP | Network enumeration and configuration extraction via weak community strings. |
-| 5900 | VNC | Remote desktop access, frequently left unpatched or poorly secured. |
-| 5985 | WinRM | Windows remote management protocol, heavily used for lateral movement. |
-| 8728 | MikroTik API | Targeting vulnerable router infrastructure for complete network takeover. |
-| 27017 | MongoDB | Database exfiltration; frequently deployed with no authentication. |
-| 7474 | Neo4j | Graph database platform, often exposed to the internet with default credentials. |
-
-### Internal Noise Identified and Silenced
-- **Samsung Smart TVs:** Broadcasting consistently on UDP/15600 to the VLAN50 broadcast address every ~5 seconds.
-- **TP-Link Deco Mesh:** Nodes sending constant discovery beacons on UDP/20002.
-- **DNS Evasion:** Devices attempting DNS-over-TLS (port 853) to bypass local DNS filters.
-- **IPv6 Chatter:** Constant IPv6 multicast and mDNS activity.
+1. **Parse the format** — confirm fields map correctly to the RFC 5424 schema.
+2. **Identify high-volume noise** — find broadcast, multicast, and vendor discovery traffic generating log volume with no security value.
+3. **Extract anomalies** — isolate inbound probes, unusual protocols, or unexpected internal traffic.
+4. **Classify by threat type** — map anomalies to known threat patterns (see table below).
+5. **Tune suppression rules** — create `SOC_SILENCE_*` rules for confirmed noise to reduce volume.
+6. **Correlate patterns** — identify repeat offenders, targeted service clusters, and timing patterns.
+7. **Document and report** — produce a structured report using the [standard template](./reports/report-template.md).
 
 ---
 
-## 🔇 SOC Noise Tuning
+## Threat Pattern Categories
 
-The `SOC_SILENCE_*` naming convention was deliberately chosen for specific firewall rules. This ensures that when an analyst is reading logs or when building SIEM detection rules, noise-suppression rules are immediately distinguishable from actual security policy enforcements.
-
-The tuning process took approximately 2 days of observing raw log output. The goal was to identify high-volume, low-value traffic (like broadcast storms and predictable vendor discovery protocols) and build explicit suppression rules. This drastically reduces the overall log volume, keeping the analyst's focus on potentially actionable security events.
+| Pattern | Indicator | Common Ports | Disposition |
+| :--- | :--- | :--- | :--- |
+| **Port Scan** | Rapid sequential SYN to many ports from one source | Any | Confirm block; flag source for threat intel |
+| **Service Reconnaissance** | Repeated probes to specific sensitive services | 22, 23, 161, 5900, 5985 | Flag for threat intel enrichment |
+| **Protocol Abuse** | Unexpected protocol on a standard or non-standard port | GRE, ICMP tunnelling | Investigate; alert if pattern repeats |
+| **Database Exposure Scan** | SYN probes to database ports from external sources | 27017, 5432, 3306, 7474 | Confirm no exposure; log for awareness |
+| **Internal Device Noise** | Broadcast/multicast from known devices on schedule | 5353, 15600, 20002 | Tune with `SOC_SILENCE_*` rule |
+| **DNS Bypass Attempt** | Outbound DNS from client to non-Unbound destination | 53, 853 | Block rule already in place; alert if rule is missing |
 
 ---
 
-## 🛠️ SIEM Readiness Assessment
+## SOC_SILENCE Convention
 
-The current logging configuration is in an excellent state for SIEM ingestion:
+Rules prefixed `SOC_SILENCE_*` are dedicated noise-suppression rules. Their naming convention serves two purposes:
 
-- **Standardized Format:** Logs are already in RFC 5424 syslog format with ISO 8601 timestamps.
-- **Compatibility:** They are easily parseable by major SIEM platforms like Splunk, Elastic/ELK, Microsoft Sentinel, and Wazuh using either native or lightweight pfSense parsers.
-- **Future Improvements:** To further elevate the security posture, the logs would benefit from:
-  - GeoIP enrichment to identify the source country of attacks.
-  - Automated threat intel correlation.
-  - Behavioral alert rules (e.g., ">20 unique destination ports targeted from a single IP within 5 minutes").
-  - Pairing these edge firewall logs with internal DNS query logs, endpoint EDR logs, and authentication logs for a comprehensive operational view.
+1. **Analyst clarity** — when reading raw logs or building SIEM queries, `SOC_SILENCE_*` rules are immediately distinguishable from actual security policy enforcement. Analysts know these entries are confirmed noise, not events requiring investigation.
+2. **SIEM filter efficiency** — SIEM ingest pipelines can exclude `SOC_SILENCE_*` rule matches from alert queues while still retaining them for audit purposes.
+
+Examples in use:
+
+| Rule Name | Suppresses |
+| :--- | :--- |
+| `SOC_SILENCE_QUIC_NOISE` | UDP 443 QUIC from CDNs and browsers |
+| `SOC_SILENCE_SAMSUNG_DISCOVERY` | UDP 15600 Samsung TV broadcast |
+| `SOC_SILENCE_TCP_GHOSTS` | TCP to ghost ports with no matching service |
+| `SOC_SILENCE_DOT_ATTEMPTS` | Outbound TCP 853 DoT bypass attempts |
+| `SOC_SILENCE_IOT_NOISE` | Chatty IoT device broadcast traffic |
+
+---
+
+## SIEM Readiness
+
+pfSense `filterlog` logs are well-suited for SIEM ingestion:
+
+- **Format:** RFC 5424 with ISO 8601 timestamps — natively parseable by Splunk, Elastic, Wazuh, and Microsoft Sentinel.
+- **Structure:** Comma-separated fields with consistent ordering — no custom parsing required for most platforms.
+- **Volume control:** `SOC_SILENCE_*` rules reduce log volume before ingestion, keeping storage costs and alert fatigue low.
+
+**Planned SIEM enhancements:**
+- GeoIP enrichment on source IPs.
+- Automated threat intel correlation (AbuseIPDB / VirusTotal).
+- Behavioural detection rules (e.g., >20 unique destination ports from one source in 5 minutes).
+- Cross-log correlation with DNS query logs and authentication events.
+
+---
+
+## Analysis Reports
+
+Individual analysis reports are stored in the [`reports/`](./reports/) directory. Each report follows the [standard template](./reports/report-template.md).
+
+| Report | Period | Key Findings |
+| :--- | :--- | :--- |
+| [April 2026](./reports/2026-04-analysis.md) | 2026-04-08 ~5.5 hrs | ~2,850 entries; external recon on 7 service ports; Samsung TV noise; MongoDB/VNC/Telnet scans |

@@ -1,208 +1,202 @@
 ![Category](https://img.shields.io/badge/Category-Network%20Configuration-blue)
-![Device](https://img.shields.io/badge/Device-MokerLink%20Switch-lightgrey)
+![Device](https://img.shields.io/badge/Device-Managed%20Switch-lightgrey)
 ![Status](https://img.shields.io/badge/Status-Implemented-brightgreen)
 
-# 🎛️ VLAN Setup Guide (MokerLink 10G)
+# VLAN Setup Guide
 
-## 📌 Overview
+## Overview
 
-This document describes how VLANs are implemented in the home lab using a **MokerLink 10G0800GTM** managed switch and **pfSense firewall**. The configuration enables **network segmentation**, improves **security posture**, and supports lab experimentation without impacting trusted devices.
+This document describes how VLANs are implemented across the managed switch and edge firewall. The configuration enforces **network segmentation**, improves **security posture**, and supports lab experimentation without affecting trusted devices.
 
-The **pfSense firewall** performs inter-VLAN routing (Layer 3), while the **managed switch** handles VLAN tagging and port membership (Layer 2).
+The **edge firewall** performs inter-VLAN routing (Layer 3) and firewall enforcement. The **managed switch** handles VLAN tagging and port membership (Layer 2).
 
 ---
 
-## 🔌 Network Topology Flow
+## Network Topology Flow
 
 ```mermaid
 graph TB
-    %% Cyber Sec Grey/Blue Theme Styling
+    %% Cyber Sec Grey/Blue Theme
+    classDef internet fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
     classDef firewall fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
-    classDef switch fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
-    classDef endpoint fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
+    classDef device fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
     classDef zone fill:#00000000,stroke:#00d2ff,stroke-width:2px,color:#00d2ff,stroke-dasharray: 5 5;
 
-    %% Nodes
-    FW["pfSense Firewall"]:::firewall
-    SW["MokerLink 10G Switch"]:::switch
-    ISP["ISP Modem"]:::endpoint -->|"WAN"| FW
-
-    %% Connections
-    FW -->|"Port 1: Trunk"| SW
+    ISP["ISP Modem"]:::internet -->|"WAN"| FW["Edge Firewall"]:::firewall
+    FW -->|"Port 1: Trunk (All VLANs)"| SW["Core Switch"]:::firewall
 
     subgraph Port_Assignments ["Switch Port Assignments"]
         direction TB
-        SW -->|"Port 2: Access"| Mgmt["Mgmt Laptop"]:::endpoint
-        SW -->|"Port 3: Access"| PC1["PC 1"]:::endpoint
-        SW -->|"Port 4: Access"| PC2["PC 2"]:::endpoint
-        SW -->|"Port 5: Access"| Srv["Home Server"]:::endpoint
-        SW -->|"Port 6: Access"| Lab["Lab Machine"]:::endpoint
-        SW -->|"Port 7: Trunk"| IoT_AP["AX6000 (IoT/Guest)"]:::endpoint
-        SW -->|"Port 8: Trunk"| Main_AP["Deco Mesh (Trusted)"]:::endpoint
+        SW -->|"Port 2: Access (VLAN 20)"| MgmtHost["Management Host"]:::device
+        SW -->|"Port 3: Access (VLAN 10)"| TrustedHost1["Trusted Host A"]:::device
+        SW -->|"Port 4: Access (VLAN 10)"| TrustedHost2["Trusted Host B"]:::device
+        SW -->|"Port 5: Access (VLAN 40)"| FileServer["File Server"]:::device
+        SW -->|"Port 6: Access (VLAN 30)"| LabEndpoint["Lab Endpoint"]:::device
+        SW -->|"Port 7: Trunk (VLAN 50, 60)"| SegmentedAP["Segmented AP (IoT/Guest)"]:::device
+        SW -->|"Port 8: Trunk (VLAN 10)"| TrustedAP["Trusted AP"]:::device
     end
     class Port_Assignments zone;
 ```
 
 **Roles:**
--   **pfSense:** DHCP per VLAN, Firewall filtering, DNS resolution.
--   **Switch:** VLAN tagging (802.1Q), Port isolation.
+- **Edge Firewall:** DHCP per VLAN, firewall filtering, Unbound DNS, inter-VLAN routing.
+- **Core Switch:** 802.1Q VLAN tagging, port isolation, Layer 2 distribution.
 
 ---
 
-## 🌐 VLAN Layout
+## VLAN Layout
 
-| VLAN ID | VLAN Name   | Subnet            | Gateway       | Primary Use Case                          |
-| :------ | :---------- | :---------------- | :------------ | :---------------------------------------- |
-| **10**  | `MAIN`      | `192.168.10.0/24` | `192.168.10.1`| PCs, laptops, phones, daily devices       |
-| **20**  | `MGMT`      | `192.168.20.0/24` | `192.168.20.1`| pfSense, switch, AP management            |
-| **30**  | `LAB`       | `192.168.30.0/24` | `192.168.30.1`| Security lab, VMs, attack testing         |
-| **40**  | `SERVERS`   | `192.168.40.0/24` | `192.168.40.1`| NAS, game servers, service hosts          |
-| **50**  | `IOT`       | `192.168.50.0/24` | `192.168.50.1`| Smart home, printers, TVs, cameras        |
-| **60**  | `GUEST`     | `192.168.60.0/24` | `192.168.60.1`| Guest internet-only access                |
+| VLAN ID | Name | Subnet | Gateway | Primary Use Case |
+| :--- | :--- | :--- | :--- | :--- |
+| **10** | `MAIN` | `192.168.10.0/24` | `192.168.10.1` | Workstations, laptops, daily devices |
+| **20** | `MGMT` | `192.168.20.0/24` | `192.168.20.1` | Firewall, switch, and AP management |
+| **30** | `LAB` | `192.168.30.0/24` | `192.168.30.1` | Security lab, VMs, attack testing |
+| **40** | `SERVERS` | `192.168.40.0/24` | `192.168.40.1` | NAS, file server, hosted services |
+| **50** | `IOT` | `192.168.50.0/24` | `192.168.50.1` | Smart home devices, printers, cameras |
+| **60** | `GUEST` | `192.168.60.0/24` | `192.168.60.1` | Guest internet-only access |
 
 ---
 
-## ⚙️ pfSense Configuration
+## pfSense Configuration
 
 ### 1. Create VLANs
+
 **Navigate:** `Interfaces` → `Assignments` → `VLANs`
 
 Add VLANs on the LAN parent interface (e.g., `igb1`, `ix0`):
--   **VLAN Tag:** `10`
--   **Description:** `VLAN10_MAIN`
--   *Repeat for VLANs 20, 30, 40, 50, and 60.*
+- **VLAN Tag:** `10`, **Description:** `VLAN10_MAIN`
+- Repeat for VLANs 20, 30, 40, 50, and 60.
 
-> **Security Rationale:** Ensure the parent interface itself is not used for untagged traffic if possible, to prevent VLAN hopping attacks.
+> **Rationale:** Ensure the parent interface carries no untagged traffic to prevent VLAN hopping attacks.
 
 ### 2. Assign Interfaces
+
 **Navigate:** `Interfaces` → `Assignments`
 
-1.  Add each VLAN as a new interface.
-2.  Enable each interface.
-3.  Assign **Static IPv4**:
-    *   `VLAN10_MAIN` → `192.168.10.1/24`
-    *   `VLAN20_MGMT` → `192.168.20.1/24`
-    *   ...and so on.
+1. Add each VLAN as a new interface.
+2. Enable each interface.
+3. Assign static IPv4 addresses (`192.168.10.1/24`, `192.168.20.1/24`, etc.)
 
 ### 3. Enable DHCP per VLAN
+
 **Navigate:** `Services` → `DHCP Server`
 
-Enable DHCP individually for each VLAN interface to ensure devices get IPs in the correct range.
+Enable DHCP individually for each VLAN interface.
 
-**Recommended Pool Layout:**
-*   **Gateway:** `.1`
-*   **Static Infrastructure:** `.2` – `.20` (Switch, APs, Servers)
-*   **Reserved Clients:** `.21` – `.99` (Printers, specific PCs)
-*   **DHCP Pool:** `.100` – `.199` (Dynamic clients)
+**Recommended address pool layout:**
 
----
-
-## 🖧 Switch Configuration
-
-### 1. Firewall Uplink Port (Trunk)
-The port connected to pfSense must carry traffic for *all* VLANs.
-
--   **Mode:** Trunk (Tag All)
--   **Tagged VLANs:** `10, 20, 30, 40, 50, 60`
--   **Untagged VLAN:** None (or Native VLAN 1 if required by switch)
-
-> **Security Rationale:** This single cable acts as the "highway" carrying multiple separated "lanes" of traffic to the router, ensuring VLAN tags are preserved for pfSense to route securely.
-
-### 2. Access Ports (End Devices)
-Ports connected to PCs, Servers, or IoT devices should only carry traffic for *one* VLAN.
-
-**Example: PC on Main VLAN**
--   **Mode:** Access
--   **PVID:** `10`
--   **Untagged VLAN:** `10`
--   **Tagged VLANs:** None
-
-**Example: IoT Camera**
--   **Mode:** Access
--   **PVID:** `50`
--   **Untagged VLAN:** `50`
-
-> **Security Rationale:** An "Access" port strips the VLAN tag before sending data to the device. The device has no idea it is on a VLAN, preventing it from actively attempting to hop to another network segment.
-
-### 3. Access Point Ports (Hybrid/Trunk)
-If the AP supports SSID-to-VLAN mapping (like Omada/Unifi), it needs a Trunk port.
-
--   **Mode:** Trunk
--   **Native/Untagged VLAN:** `20` (Management IP of the AP)
--   **Tagged VLANs:** `10` (Main SSID), `50` (IoT SSID), `60` (Guest SSID)
+| Range | Purpose |
+| :--- | :--- |
+| `.1` | Gateway (firewall) |
+| `.2` – `.20` | Static infrastructure (switch, APs, servers) |
+| `.21` – `.99` | Reserved clients (printers, specific hosts) |
+| `.100` – `.199` | Dynamic DHCP pool |
 
 ---
 
-## 🔌 Recommended Switch Port Layout
+## Switch Configuration
 
-| Switch Port | Device / Connection        | VLAN Mode | Assignment                  | Security Purpose                       |
-| :---------- | :------------------------- | :-------- | :-------------------------- | :------------------------------------- |
-| **TE1**     | pfSense Firewall Uplink    | **Trunk** | Tagged: `10-60`             | Inter-VLAN routing pipeline.           |
-| **TE2**     | Management Station         | **Access**| VLAN `20` (MGMT)            | Restrict admin access to mgmt subnet.  |
-| **TE3**     | PC 1                       | **Access**| VLAN `10` (MAIN)            | Trust boundary for personal data.      |
-| **TE4**     | PC 2                       | **Access**| VLAN `10` (MAIN)            | Trust boundary for personal data.      |
-| **TE5**     | Server                     | **Access**| VLAN `40` (SERVERS)         | Controls access to sensitive data.     |
-| **TE6**     | Lab Machine                | **Access**| VLAN `30` (LAB)             | Isolates malware/testing traffic.      |
-| **TE7**     | AX6000 (IoT/Guest AP)      | **Trunk** | Tagged: `50`, `60` / Nat: `20`| Separates IoT and Guest Wi-Fi traffic. |
-| **TE8**     | Deco Mesh (Main AP)        | **Trunk** | Tagged: `10` / Nat: `20`    | Main trusted Wi-Fi access.             |
+### Firewall Uplink (Trunk Port)
+
+The port connected to the edge firewall must carry all VLAN traffic tagged.
+
+- **Mode:** Trunk (Tag All)
+- **Tagged VLANs:** `10, 20, 30, 40, 50, 60`
+- **Untagged VLAN:** None
+
+> **Rationale:** The trunk port acts as a single cable carrying multiple separated traffic lanes. VLAN tags are preserved end-to-end, allowing the firewall to enforce per-VLAN policies.
+
+### Access Ports (End Devices)
+
+Ports connected to workstations, servers, or single-VLAN devices should carry only one VLAN — untagged.
+
+**Example: Workstation on VLAN 10**
+- **Mode:** Access
+- **PVID:** `10`
+- **Untagged VLAN:** `10`
+
+**Example: IoT device**
+- **Mode:** Access
+- **PVID:** `50`
+- **Untagged VLAN:** `50`
+
+> **Rationale:** Access ports strip VLAN tags before delivery to the end device. The device has no visibility into the VLAN structure and cannot attempt VLAN hopping.
+
+### Access Point Ports (Trunk)
+
+APs that map SSIDs to VLANs require a trunk port.
+
+- **Mode:** Trunk
+- **Native/Untagged VLAN:** `20` (management IP of the AP)
+- **Tagged VLANs:** `10` (trusted SSID), `50` (IoT SSID), `60` (guest SSID)
 
 ---
 
-## 📝 DHCP Reservation Best Practice
+## Recommended Port Layout
 
-To maintain a stable infrastructure, assign static IPs via DHCP reservation.
+| Port | Device / Connection | Mode | VLAN Assignment | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| **TE1** | Edge Firewall Uplink | Trunk | Tagged: 10–60 | Inter-VLAN routing pipeline |
+| **TE2** | Management Station | Access | VLAN 20 | Restrict admin access to management subnet |
+| **TE3** | Trusted Host A | Access | VLAN 10 | Trust boundary for primary workstation |
+| **TE4** | Trusted Host B | Access | VLAN 10 | Trust boundary for secondary workstation |
+| **TE5** | File Server | Access | VLAN 40 | Controls access to sensitive data |
+| **TE6** | Lab Endpoint | Access | VLAN 30 | Isolates malware and testing traffic |
+| **TE7** | Segmented AP (IoT/Guest) | Trunk | Tagged: 50, 60 / Native: 20 | Separates IoT and guest Wi-Fi traffic |
+| **TE8** | Trusted AP | Trunk | Tagged: 10 / Native: 20 | Trusted Wi-Fi access |
 
-| Device Type | Suggested IP Range | Example         |
-| :---------- | :----------------- | :-------------- |
-| **Gateway** | `.1`               | `192.168.20.1`  |
-| **Switch**  | `.2`               | `192.168.20.2`  |
-| **AP**      | `.3`               | `192.168.20.3`  |
-| **Servers** | `.10` – `.19`      | `192.168.40.10` |
-| **Printers**| `.20` – `.29`      | `192.168.50.20` |
-| **Cameras** | `.30`+             | `192.168.50.31` |
+---
+
+## DHCP Reservation Best Practice
+
+Assign static IPs to infrastructure devices via DHCP reservation for consistent management.
+
+| Device Type | IP Range | Example |
+| :--- | :--- | :--- |
+| **Gateway** | `.1` | `192.168.20.1` |
+| **Switch** | `.2` | `192.168.20.2` |
+| **Access Points** | `.3`–`.5` | `192.168.20.3` |
+| **Servers** | `.10`–`.19` | `192.168.40.10` |
+| **Printers** | `.20`–`.29` | `192.168.50.20` |
+| **Cameras** | `.30`+ | `192.168.50.31` |
 
 **Configured via:** `Status` → `DHCP Leases` → `Add Static Mapping`
 
 ---
 
-## ✅ Validation Checklist
+## Validation Checklist
 
 After configuration, verify the following:
 
--   [ ] **IP Assignment:** Connect a PC to Port 3. Does it get a `192.168.10.x` IP?
--   [ ] **IoT Isolation:** Connect a PC to Port 7. Does it get a `192.168.50.x` IP?
--   [ ] **Internet Access:** Can VLAN 10 and 50 access `8.8.8.8`?
--   [ ] **Inter-VLAN Block:** Can the IoT PC (Port 7) Ping the Main PC (Port 3)? (Should fail).
--   [ ] **Management Access:** Can the Main PC access the Switch UI at `192.168.20.2`? (Should pass if rules allow).
+- [ ] Connect a device to a VLAN 10 access port — confirm it receives a `192.168.10.x` IP.
+- [ ] Connect a device to the IoT/Guest AP trunk port — confirm VLAN 50 devices receive `192.168.50.x`.
+- [ ] Confirm VLAN 10 and VLAN 50 can reach the internet.
+- [ ] Confirm IoT device (VLAN 50) cannot ping or connect to a VLAN 10 device.
+- [ ] Confirm DNS queries from VLAN 50 are answered by Unbound (not an external resolver).
+- [ ] Confirm management interfaces (VLAN 20) are not reachable from VLAN 50 or VLAN 60.
 
 ---
 
-## 🔧 Troubleshooting Tips
+## Troubleshooting
 
-> **Troubleshooting: No DHCP Lease?**
-> *   **Switch:** Check if the PVID matches the VLAN ID.
-> *   **Firewall:** Ensure the DHCP Server service is running for that specific interface.
+**No DHCP lease:**
+- Switch: verify the PVID matches the intended VLAN ID for the port.
+- Firewall: confirm the DHCP server service is enabled for the specific VLAN interface.
 
-> **Troubleshooting: No Internet?**
-> *   **Firewall:** Check "Outbound NAT" rules (usually automatic).
-> *   **Rules:** Ensure there is an "Allow Any to Any" (or specific) rule on the VLAN interface.
+**No internet access:**
+- Firewall: check outbound NAT rules (usually automatic with default settings).
+- Rules: confirm there is an allow rule for internet traffic on the VLAN interface.
 
-> **Troubleshooting: Cannot Access Management VLAN?**
-> *   **Rules:** You explicitly need a firewall rule on `VLAN10_MAIN` allowing traffic to `VLAN20_MGMT`.
-> *   **Block:** Ensure there isn't a floating rule blocking `RFC1918` traffic indiscriminately.
-
----
-
-## 🛡️ Security Notes
-
-This configuration implements **Defense in Depth**:
-
-1.  **Layer 2 Isolation:** Devices physically cannot see each other's broadcast traffic.
-2.  **Management Plane Protection:** The switch management interface is only listening on VLAN 20, keeping it invisible to IoT devices.
-3.  **Reduced Blast Radius:** If a device on Port 7 is hacked, the attacker is confined to VLAN 50.
+**Cannot reach Management VLAN:**
+- Rules: verify there is an explicit allow rule on the source VLAN for traffic to VLAN 20.
+- Block: check for floating rules that may be blocking RFC 1918 traffic broadly.
 
 ---
 
-## 🚀 Conclusion
+## Security Notes
 
-This VLAN setup provides **enterprise-style segmentation** suitable for cybersecurity learning, testing, and safe home infrastructure operation. By strictly defining port roles, we ensure that security policy is enforced at the physical edge of the network.
+This configuration implements **Defense in Depth** at Layer 2:
+
+1. **Broadcast domain isolation** — Devices on different VLANs cannot see each other's Layer 2 broadcasts.
+2. **Management plane invisibility** — The switch management interface listens only on VLAN 20 — invisible to IoT and guest devices.
+3. **Blast radius containment** — A compromised device on any access port is confined to its assigned VLAN. Escalation requires crossing an explicit firewall allow rule.
