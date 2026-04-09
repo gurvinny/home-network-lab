@@ -1,104 +1,106 @@
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 ![Lab Type](https://img.shields.io/badge/Lab-Network%20Security-blue)
+![Platform](https://img.shields.io/badge/Platform-pfSense%20Plus-2ea043)
+![Filesystem](https://img.shields.io/badge/Filesystem-ZFS-9b59b6)
+![Remote Access](https://img.shields.io/badge/Remote%20Access-Tailscale-00b4d8)
 ![License](https://img.shields.io/badge/License-MIT-orange)
-![Platform](https://img.shields.io/badge/Platform-pfSense%20%7C%20MokerLink%20Switch-lightgrey)
 
-# 🛡️ Home Network Security Lab
+# Home Network Security Lab
 
-A production-grade home network lab designed to simulate **enterprise segmentation**, **firewall policy enforcement**, and **secure infrastructure deployment** using pfSense and managed switching.
-
-This environment serves as a hands-on platform for cybersecurity experimentation, attack simulation, network hardening, and infrastructure security testing.
+A production-grade home network lab implementing **enterprise-style segmentation**, **stateful firewall enforcement**, **zero-trust DNS controls**, and **secure remote access** — built for hands-on cybersecurity experimentation, threat simulation, and SOC skill development.
 
 ---
 
-## 📌 Overview
+## Overview
 
-This lab implements full **VLAN segmentation** with firewall-enforced isolation to prevent lateral movement between device classes while maintaining usability for home and lab services.
+This lab enforces strict **VLAN segmentation** with firewall-controlled inter-zone routing to eliminate lateral movement paths between device classes. Every security decision is documented, every rule has a rationale, and logs are structured for SIEM ingestion.
 
-**Core Goals:**
+**Core Security Goals:**
 
--   **Separate** trusted and untrusted devices.
--   **Contain** IoT and guest networks to reduce attack surface.
--   **Secure** infrastructure management interfaces.
--   **Enable** realistic attack and defense scenarios.
--   **Maintain** high-speed internal networking.
+- Separate trusted and untrusted devices at Layer 2 and Layer 3.
+- Contain IoT and guest traffic — zero ability to reach internal networks.
+- Enforce DNS at the network level — no client bypass possible.
+- Protect the management plane from all non-administrative access.
+- Provide auditable remote access via Tailscale with no open WAN ports.
+- Generate clean, SIEM-ready logs through structured noise suppression.
 
 ---
 
-## 🧱 Infrastructure Stack
+## Infrastructure Stack
 
 ```mermaid
 graph TD
-    %% Cyber Sec Grey/Blue Theme Styling
+    %% Cyber Sec Grey/Blue Theme
     classDef hardware fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
     classDef cloud fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
+    classDef vpn fill:#0f172a,stroke:#2ea043,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
 
-    ISP["ISP Fiber Connection (5Gb)"]:::cloud -->|"WAN"| FW["pfSense Firewall"]:::hardware
-    FW -->|"10Gb SFP+ DAC/Fiber"| SW["MokerLink 10G Switch"]:::hardware
-    SW -->|"VLAN Tagged"| VLANs["Segmented VLAN Networks"]:::hardware
-    VLANs -->|"Trunk / Access"| Clients["Access Points / Servers / Clients"]:::hardware
+    ISP["ISP Fiber (5Gb)"]:::cloud -->|"WAN"| FW["Edge Firewall"]:::hardware
+    Remote["Remote Device"]:::vpn -.->|"Tailscale Mesh VPN"| TS["Tailscale Coordination"]:::vpn
+    TS -.->|"WireGuard Tunnel"| FW
+    FW -->|"10Gb SFP+ Trunk"| SW["Core Switch"]:::hardware
+    SW -->|"VLAN Tagged"| VLANs["Segmented VLANs"]:::hardware
+    VLANs -->|"Trunk / Access"| Clients["Network Endpoints"]:::hardware
 ```
 
 **Core Technologies:**
 
--   **pfSense Firewall:** Edge security and inter-VLAN routing running on enterprise-grade hardware.
--   **Managed 10Gb Switch:** Layer 2 segmentation and VLAN tagging via MokerLink 10G0800GTM.
--   **VLAN Segmentation:** Logical isolation of network traffic.
--   **Stateful Firewall Policies:** Granular access control.
--   **DHCP Reservations:** Consistent IP management for infrastructure.
--   **mDNS Reflection:** Service discovery across boundaries.
--   **IoT Containment Architecture:** Zero-trust approach using dedicated APs.
+- **pfSense Plus:** Edge firewall, inter-VLAN routing, DHCP, Unbound DNS — running on enterprise-grade hardware with QAT and ZFS.
+- **Managed 10Gb Switch:** Layer 2 segmentation and 802.1Q VLAN tagging.
+- **VLAN Segmentation:** Logical isolation of all traffic by device class and trust level.
+- **Stateful Firewall Policies:** Granular ACLs with default-deny inter-VLAN posture.
+- **Forced DNS (Unbound):** All VLANs resolve through pfSense — no client bypass honored.
+- **Tailscale Remote Access:** Subnet router + exit node + MagicDNS — zero open WAN ports.
+- **SOC_SILENCE Framework:** Named noise-suppression rules for clean SIEM-ready log output.
 
 ---
 
-## 🧰 Hardware Used
+## Hardware
 
-| Component       | Model / Type                     | Purpose                                      |
-| :-------------- | :------------------------------- | :------------------------------------------- |
-| **Firewall**    | OEM Server Appliance (Atom C3758)| Routing, firewall, VLAN segmentation         |
-| **Switch**      | MokerLink 10G0800GTM             | 10GbE Managed Switch for VLAN distribution   |
-| **Transceiver** | TP-Link TL-SM5310-T              | 10GBase-T RJ45 SFP+ Module for Copper Uplinks|
-| **Main AP**     | Deco Wi-Fi 6E Mesh               | Trusted Wireless client connectivity         |
-| **IoT AP**      | AX6000 Next-Gen Wi-Fi Router     | Dedicated IoT/Guest Wireless                 |
-| **Servers**     | Home lab servers / PCs           | Lab testing & services                       |
-| **Storage**     | NAS / local servers              | Data & lab services                          |
+| Component | Model / Type | Purpose |
+| :--- | :--- | :--- |
+| **Firewall Appliance** | OEM Server (Intel Atom C3758) | Edge security, routing, DNS, DHCP |
+| **Core Switch** | MokerLink 10G0800GTM | 10GbE managed switching, VLAN distribution |
+| **SFP+ Transceiver** | TP-Link TL-SM5310-T | 10GBase-T RJ45 uplink between firewall and switch |
+| **Trusted AP** | Wi-Fi 6E Mesh System | Trusted zone wireless connectivity |
+| **Segmented AP** | Next-Gen Wi-Fi Router | Dedicated IoT and guest wireless isolation |
+| **Lab Servers** | Home lab server hardware | Security lab testing and hosted services |
+| **Storage** | NAS appliance | Data and service hosting |
 
-### 🖥️ Hardware Specifications
+### Firewall Appliance Specifications
 
-#### Firewall Appliance
-*   **Processor:** Intel Atom C3758 (8-Core, 2.20 GHz, 16 MB Cache, AES-NI & QAT Support).
-*   **Memory:** 32GB DDR4 ECC.
-*   **Networking:**
-    *   4x Intel I350 Gigabit RJ-45.
-    *   2x Intel X553 10GbE SFP+ (Note: Supports 1GbE/10GbE only; no 2.5/5GbE support).
-*   **Storage:** 256GB M.2 SATA SSD + 16GB eMMC.
-*   **I/O:** 2x USB 3.0, 1x Micro-USB Console.
+- **Processor:** Intel Atom C3758 (8-core, 2.20 GHz) — AES-NI + QAT hardware acceleration enabled.
+- **Memory:** 32 GB DDR4 ECC.
+- **Networking:** 4x Intel I350 GbE RJ-45 + 2x Intel X553 10GbE SFP+.
+- **Storage:** 256 GB M.2 SATA SSD + 16 GB eMMC — ZFS filesystem.
+- **OS:** pfSense Plus (upgraded from CE) — enables QAT driver support and improved ZFS integration.
 
-#### SFP+ Connectivity
-*   **Module:** TP-Link TL-SM5310-T (10GBase-T RJ45 SFP+).
-*   Used to connect the **Firewall's SFP+ LAN interface** to the **MokerLink Switch** or high-speed servers over copper cabling.
+> **Why pfSense Plus:** The CE → Plus upgrade unlocked QAT hardware crypto offloading (accelerates VPN/TLS handshakes) and first-class ZFS support for filesystem integrity and snapshot-based backups.
 
 ---
 
-## 📊 Network Topology
+## Network Topology
 
 ```mermaid
 flowchart TB
-    %% Cyber Sec Grey/Blue Theme Styling
+    %% Cyber Sec Grey/Blue Theme
     classDef internet fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
     classDef firewall fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
     classDef switch fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
     classDef vlan fill:#1e293b,stroke:#3b82f6,stroke-width:2px,stroke-dasharray: 3 3,color:#ffffff;
     classDef device fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
     classDef zone fill:#00000000,stroke:#00d2ff,stroke-width:2px,color:#00d2ff,stroke-dasharray: 5 5;
+    classDef vpn fill:#0f172a,stroke:#2ea043,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
 
-    Internet["Internet"]:::internet -->|"WAN"| pfSense["pfSense Firewall (Atom C3758)"]:::firewall
-    pfSense -->|"10Gb SFP+ Trunk"| Switch["MokerLink 10G Switch"]:::switch
+    Internet["Internet"]:::internet -->|"WAN"| EdgeFW["Edge Firewall"]:::firewall
+    RemoteDevice["Remote Device"]:::vpn -.->|"Tailscale"| EdgeFW
+
+    EdgeFW -->|"10Gb SFP+ Trunk"| CoreSW["Core Switch"]:::switch
 
     subgraph Infrastructure ["VLAN 20: Management"]
         direction TB
-        pfSense
-        Switch
+        EdgeFW
+        CoreSW
     end
     class Infrastructure vlan;
 
@@ -106,15 +108,15 @@ flowchart TB
         direction TB
         subgraph VLAN10 ["VLAN 10: Main"]
             direction LR
-            PC1["PC1"]:::device
-            Deco["Deco Mesh AP"]:::device
+            TrustedHost["Trusted Host"]:::device
+            TrustedAP["Trusted AP"]:::device
         end
         class VLAN10 vlan;
-        
+
         subgraph VLAN40 ["VLAN 40: Servers"]
             direction LR
-            NAS["NAS"]:::device
-            Srv["Game Servers"]:::device
+            FileServer["File Server"]:::device
+            LabServers["Lab Servers"]:::device
         end
         class VLAN40 vlan;
     end
@@ -124,160 +126,183 @@ flowchart TB
         direction TB
         subgraph VLAN50 ["VLAN 50: IoT"]
             direction LR
-            IoT_AP["AX6000 Wi-Fi Router"]:::device
-            TV["Smart TVs"]:::device
-            Prn["Printer"]:::device
-            Smart["Smart Home Devices"]:::device
+            SegmentedAP["Segmented AP"]:::device
+            IoTDevices["IoT Devices"]:::device
+            IoTPrinter["IoT Printer"]:::device
         end
         class VLAN50 vlan;
 
         subgraph VLAN60 ["VLAN 60: Guest"]
             direction LR
-            Gst["Guest Devices"]:::device
+            GuestEndpoint["Guest Endpoint"]:::device
         end
         class VLAN60 vlan;
     end
     class Untrusted_Zone zone;
-    
+
+    subgraph Isolated_Zone ["Isolated Zone"]
+        subgraph VLAN30 ["VLAN 30: Lab"]
+            direction LR
+            LabEndpoint["Lab Endpoint"]:::device
+        end
+        class VLAN30 vlan;
+    end
+    class Isolated_Zone zone;
+
     %% Physical Connections
-    Switch -->|"SFP+ 10G"| PC1
-    Switch -->|"RJ45 1G"| Deco
-    Switch -->|"SFP+ 10G"| NAS
-    Switch -->|"RJ45 1G"| IoT_AP
+    CoreSW -->|"10Gb SFP+"| TrustedHost
+    CoreSW -->|"1Gb RJ45"| TrustedAP
+    CoreSW -->|"10Gb SFP+"| FileServer
+    CoreSW -->|"1Gb RJ45"| SegmentedAP
 
     %% Logical Connections
-    IoT_AP -.->|"Wi-Fi"| TV
-    IoT_AP -.->|"Wi-Fi"| Prn
-    IoT_AP -.->|"Wi-Fi"| Smart
+    SegmentedAP -.->|"Wi-Fi"| IoTDevices
+    SegmentedAP -.->|"Wi-Fi"| IoTPrinter
+    SegmentedAP -.->|"Wi-Fi"| GuestEndpoint
 ```
 
 ---
 
-## 🌐 VLAN Architecture
+## VLAN Architecture
 
-| VLAN   | Subnet            | Purpose                             | Access Level    |
-| :----- | :---------------- | :---------------------------------- | :-------------- |
-| **VLAN10** | `192.168.10.0/24` | Main devices (PCs, phones, laptops) | **Trusted**     |
-| **VLAN20** | `192.168.20.0/24` | Infrastructure & management network | **Restricted**  |
-| **VLAN30** | `192.168.30.0/24` | Security lab & testing environment  | **Isolated**    |
-| **VLAN40** | `192.168.40.0/24` | Servers, NAS, and service hosts     | **Controlled**  |
-| **VLAN50** | `192.168.50.0/24` | IoT & smart home devices            | **Contained**   |
-| **VLAN60** | `192.168.60.0/24` | Guest network access                | **Internet-only**|
-
----
-
-## 🔐 Network Security Model
-
-Traffic policies enforce strict segmentation based on the principle of least privilege. This prevents lateral movement if a device (especially an IoT device) becomes compromised.
-
-### Policy Overview
-
-| Source | Destination | Action | Rationale |
-| :----- | :---------- | :----- | :-------- |
-| **MAIN** | **IoT** | ✅ Allowed | Users need to control smart devices. |
-| **IoT** | **MAIN** | ❌ Blocked | Compromised bulbs/fridges shouldn't hack your PC. |
-| **IoT** | **MGMT** | ❌ Blocked | Absolute protection for infrastructure. |
-| **LAB** | **MAIN** | ❌ Blocked | Malware in the lab stays in the lab. |
-| **GUEST** | **Internal** | ❌ Blocked | Guests get internet only, no snooping. |
-| **All** | **WAN** | ✅ Allowed | Internet access for all devices. |
-
-> **Security Rationale:** In a flat network (`192.168.1.x`), a compromised smart TV allows an attacker to directly scan and exploit your personal laptop. In this segmented model, the attacker is trapped in VLAN50, unable to reach the Trusted Zone or Management Plane.
+| VLAN | Subnet | Purpose | Trust Level |
+| :--- | :--- | :--- | :--- |
+| **VLAN 10** | `192.168.10.0/24` | Primary devices — workstations, phones, laptops | **Trusted** |
+| **VLAN 20** | `192.168.20.0/24` | Infrastructure and management interfaces | **Restricted** |
+| **VLAN 30** | `192.168.30.0/24` | Security lab — malware testing, attack simulation | **Isolated** |
+| **VLAN 40** | `192.168.40.0/24` | Servers, NAS, hosted services | **Controlled** |
+| **VLAN 50** | `192.168.50.0/24` | IoT and smart home devices | **Contained** |
+| **VLAN 60** | `192.168.60.0/24` | Guest network — internet-only access | **Internet-only** |
 
 ---
 
-## 🖨️ Cross-VLAN Services Enabled
+## Network Security Model
 
-To preserve usability while maintaining segmentation, specific "pinholes" are opened in the firewall:
+Traffic policy enforces strict least-privilege segmentation. Inter-VLAN routing is denied by default — only explicit allow rules pass traffic.
 
--   **AirPrint:** Works across VLANs using Avahi (mDNS reflection).
--   **Media Casting:** Smart TVs are reachable from trusted devices.
--   **Printing:** Printer is accessible securely from the main network, but the printer cannot initiate connections back.
--   **Service Discovery:** Enabled via mDNS reflection to allow devices to "see" each other across subnets without full access.
+| Source | Destination | Policy | Rationale |
+| :--- | :--- | :--- | :--- |
+| **Main** | **IoT** | Allow | Users initiate control of smart devices. |
+| **IoT** | **Main** | Block | Compromised IoT cannot reach workstations. |
+| **IoT** | **Management** | Block | Absolute infrastructure protection. |
+| **Lab** | **Main** | Block | Malware in the lab stays in the lab. |
+| **Guest** | **Internal** | Block | Guests get internet only — no lateral access. |
+| **All VLANs** | **DNS (port 53)** | Forced to Unbound | Clients cannot use external resolvers. |
+| **All VLANs** | **DoT (port 853)** | Block | Prevents TLS-based DNS bypass. |
+| **Remote** | **Network** | Tailscale only | Zero open WAN ports; all other inbound denied. |
 
 ---
 
-## 🧪 Lab Use Cases
+## Attack Surface Overview
+
+| Attack Vector | Exposed Surface | Mitigation | Residual Risk |
+| :--- | :--- | :--- | :--- |
+| **WAN Inbound** | Tailscale UDP 41641 only | All other inbound explicitly blocked | Low |
+| **IoT Compromise** | VLAN 50 — segmented | DNS NAT override; no inbound initiation; RFC1918 blocked | Contained |
+| **Guest Pivot** | VLAN 60 — internet-only | Hard block to all RFC 1918 space | None |
+| **DNS Hijack / Exfil** | All VLANs | Forced Unbound; DoT blocked; IoT NAT override | Low |
+| **Unauthorized Remote Access** | Tailscale mesh | No open ports; device + user auth required via Tailscale | Low |
+| **Lateral Movement** | Inter-VLAN paths | Default-deny firewall; stateful ACLs; VLAN isolation | Low |
+
+---
+
+## Cross-VLAN Services
+
+Specific firewall pinholes preserve usability without compromising segmentation:
+
+- **AirPrint:** Avahi mDNS reflection enables printing from trusted VLANs to IoT-segment printer.
+- **Media Discovery:** Trusted hosts can initiate casting to IoT-side media devices.
+- **Service Discovery:** mDNS reflection scoped to specific service types — no full subnet access granted.
+
+---
+
+## Lab Use Cases
 
 This environment supports a wide range of security experiments:
 
-1.  **Attack Path Testing:** Simulate an attacker pivoting from a compromised IoT device.
-2.  **Lateral Movement Simulation:** Test detection rules against real traffic.
-3.  **Firewall Rule Validation:** Ensure deny rules are actually dropping packets.
-4.  **IDS/IPS Experimentation:** Deploy Snort/Suricata on the edge.
-5.  **Malware Containment:** Detonate samples in the isolated Lab VLAN.
-6.  **Network Traffic Inspection:** Capture PCAP data for analysis.
+1. **Lateral Movement Simulation** — Attempt pivoting from a compromised IoT device.
+2. **Firewall Rule Validation** — Confirm deny rules are actually dropping packets with PCAP.
+3. **DNS Enforcement Testing** — Verify clients cannot bypass Unbound using hardcoded resolvers.
+4. **Attack Path Testing** — Test kill-chain scenarios from VLAN30 lab to Trusted Zone.
+5. **IDS/IPS Experimentation** — Deploy Suricata on the edge for threat detection.
+6. **Log Analysis and SIEM Prep** — Analyze firewall logs for recon patterns and build detection rules.
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```text
 home-network-lab/
 ├── network-core/
+│   ├── README.md
 │   └── switch-config/
 │       └── vlan-setup.md
-├── security/
-│   ├── adblockers/
-│   │   └── README.md
-│   ├── firewall-rules/
-│   │   ├── segmentation-policy.md
-│   │   ├── wan-rules.md
-│   │   ├── lan-rules.md
-│   │   └── vlan50-iot-rules.md
-│   ├── ids-ips/
-│   │   └── README.md
-│   └── log-analysis/
-│       └── README.md
-└── README.md
+└── security/
+    ├── README.md
+    ├── firewall-rules/
+    │   ├── segmentation-policy.md
+    │   ├── wan-rules.md
+    │   ├── lan-rules.md
+    │   └── vlan50-iot-rules.md
+    ├── dns/
+    │   └── README.md
+    ├── vpn-access/
+    │   └── README.md
+    └── log-analysis/
+        ├── README.md
+        └── reports/
+            ├── report-template.md
+            └── 2026-04-analysis.md
 ```
 
 ---
 
-## 🎯 Skills Demonstrated
+## Skills Demonstrated
 
-This lab showcases practical experience in:
+This lab showcases practical experience with:
 
--   **Network Segmentation Design:** Planning VLANs for security and function.
--   **Firewall Policy Development:** Writing stateful rulesets.
--   **VLAN Implementation:** Configuring 802.1Q tagging on switches and routers.
--   **Infrastructure Hardening:** Securing management planes.
--   **Attack Surface Reduction:** Minimizing the exposure of critical assets.
--   **Enterprise Architecture:** Applying corporate security patterns to a small network.
--   **SOC Log Tuning:** Building noise suppression frameworks for SIEM-ready log output.
--   **Traffic Analysis:** Identifying reconnaissance patterns, port scanning, and threat actor behavior in real firewall logs.
--   **DNS Security Enforcement:** Preventing DNS bypass via DoT blocking and IoT DNS NAT override.
-
----
-
-## 🚀 Future Enhancements
-
-Planned improvements for the lab:
-
--   [x] **Zero-Trust:** Micro-segmentation implemented with per-device trust groups and IoT isolation.
--   [ ] **SIEM Integration:** Ship logs to Wazuh or Elastic for correlation and alerting.
--   [ ] **Threat Intel Enrichment:** Automate IP reputation checks against AbuseIPDB/VirusTotal.
--   [ ] **Detection Rules:** Build correlation rules for scan detection (e.g., >20 ports from single IP in 5 minutes).
--   [ ] **IDS/IPS Deployment:** Suricata for threat detection.
--   [ ] **VPN Remote Access:** WireGuard for secure remote entry.
--   [ ] **Network Monitoring:** Grafana/Prometheus dashboards.
--   [ ] **Automated Backups:** Ansible playbooks for config management.
--   [ ] **Attack Simulation:** Automated red team scenarios.
--   [ ] **Adblockers:** Deployment of pfBlockerNG / Pi-hole for DNS filtering.
+- **Network Segmentation Design** — Planning and implementing VLANs for security and function.
+- **Firewall Policy Development** — Writing stateful rulesets with documented rationale.
+- **VLAN Implementation** — Configuring 802.1Q tagging across managed switching and routing.
+- **Zero-Trust Architecture** — Micro-segmentation with per-device trust groups.
+- **DNS Security Enforcement** — Forced resolver, DoT blocking, DNSSEC, encrypted upstream (Cloudflare + Quad9).
+- **VPN Architecture** — Tailscale subnet routing, exit node, and MagicDNS integration.
+- **SOC Log Tuning** — Building SOC_SILENCE noise suppression frameworks for SIEM-ready output.
+- **Traffic Analysis** — Identifying reconnaissance patterns, port scan signatures, and threat actor behaviour in real firewall logs.
+- **Infrastructure Hardening** — Management plane isolation, attack surface reduction.
+- **Hardware Crypto Acceleration** — QAT integration for VPN and TLS workload offloading.
 
 ---
 
-## 🧠 Why This Matters
+## Roadmap
 
-Modern security incidents rely heavily on **lateral movement** after initial compromise. Proper segmentation dramatically reduces the "blast radius" of an infection.
-
-> "Identity is the new perimeter, but the network is still the battlefield."
-
-This lab demonstrates real-world defensive networking principles used in enterprise environments, scaled down for study and experimentation.
+| Status | Enhancement |
+| :--- | :--- |
+| **Done** | Zero-trust VLAN micro-segmentation |
+| **Done** | pfSense Plus — QAT hardware crypto + ZFS filesystem |
+| **Done** | Tailscale remote access — subnet router + exit node + MagicDNS |
+| **Done** | Forced DNS enforcement — Unbound + Cloudflare/Quad9 + DoT blocking |
+| **Done** | SOC log tuning — SOC_SILENCE noise suppression framework |
+| Planned | SIEM integration — Wazuh or Elastic for log correlation and alerting |
+| Planned | Threat intel enrichment — AbuseIPDB / VirusTotal IP reputation |
+| Planned | Detection rules — scan detection, anomaly correlation |
+| Planned | IDS/IPS — Suricata for inline threat detection |
+| Planned | Network monitoring — Grafana / Prometheus dashboards |
+| Planned | Adblocker / DNS sinkhole — pfBlockerNG for malicious domain filtering |
+| Planned | Automated config backups — Ansible playbooks |
 
 ---
 
-## 📫 Contact
+## Why This Matters
+
+Modern security incidents rely on **lateral movement** after initial compromise. Proper segmentation eliminates the paths attackers need to escalate from a compromised IoT device to critical infrastructure.
+
+> "The network is still the battlefield — but a well-segmented one is a battlefield the attacker cannot navigate."
+
+This lab demonstrates real-world defensive networking principles found in enterprise environments, scaled for hands-on study and experimentation.
+
+---
+
+## Contact
 
 Open to collaboration, security discussions, and infrastructure design conversations.
-
----
