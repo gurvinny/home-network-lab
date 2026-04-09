@@ -31,16 +31,18 @@ This lab enforces strict **VLAN segmentation** with firewall-controlled inter-zo
 ```mermaid
 graph TD
     %% Cyber Sec Grey/Blue Theme
-    classDef hardware fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
-    classDef cloud fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
+    classDef internet fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
+    classDef firewall fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
+    classDef device fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
+    classDef vlan fill:#1e293b,stroke:#3b82f6,stroke-width:2px,stroke-dasharray: 3 3,color:#ffffff;
     classDef vpn fill:#0f172a,stroke:#2ea043,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
 
-    ISP["ISP Fiber (5Gb)"]:::cloud -->|"WAN"| FW["Edge Firewall"]:::hardware
-    Remote["Remote Device"]:::vpn -.->|"Tailscale Mesh VPN"| TS["Tailscale Coordination"]:::vpn
+    ISP["ISP Fiber (5Gb)"]:::internet -->|"WAN"| FW["Edge Firewall"]:::firewall
+    Remote["Remote Device"]:::device -.->|"Tailscale Mesh VPN"| TS["Tailscale Coordination"]:::vpn
     TS -.->|"WireGuard Tunnel"| FW
-    FW -->|"10Gb SFP+ Trunk"| SW["Core Switch"]:::hardware
-    SW -->|"VLAN Tagged"| VLANs["Segmented VLANs"]:::hardware
-    VLANs -->|"Trunk / Access"| Clients["Network Endpoints"]:::hardware
+    FW -->|"10Gb SFP+ Trunk"| SW["Core Switch"]:::firewall
+    SW -->|"VLAN Tagged"| VLANs["Segmented VLANs"]:::vlan
+    VLANs -->|"Trunk / Access"| Clients["Network Endpoints"]:::device
 ```
 
 **Core Technologies:**
@@ -86,16 +88,15 @@ flowchart TB
     %% Cyber Sec Grey/Blue Theme
     classDef internet fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
     classDef firewall fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
-    classDef switch fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
     classDef vlan fill:#1e293b,stroke:#3b82f6,stroke-width:2px,stroke-dasharray: 3 3,color:#ffffff;
     classDef device fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
     classDef zone fill:#00000000,stroke:#00d2ff,stroke-width:2px,color:#00d2ff,stroke-dasharray: 5 5;
     classDef vpn fill:#0f172a,stroke:#2ea043,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
 
     Internet["Internet"]:::internet -->|"WAN"| EdgeFW["Edge Firewall"]:::firewall
-    RemoteDevice["Remote Device"]:::vpn -.->|"Tailscale"| EdgeFW
+    RemoteDevice["Remote Device"]:::device -.->|"Tailscale"| EdgeFW
 
-    EdgeFW -->|"10Gb SFP+ Trunk"| CoreSW["Core Switch"]:::switch
+    EdgeFW -->|"10Gb SFP+ Trunk"| CoreSW["Core Switch"]:::firewall
 
     subgraph Infrastructure ["VLAN 20: Management"]
         direction TB

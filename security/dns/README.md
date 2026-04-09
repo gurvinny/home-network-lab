@@ -21,19 +21,19 @@ A common evasion and exfiltration technique is **DNS bypass** — devices (espec
 ```mermaid
 flowchart TB
     %% Cyber Sec Grey/Blue Theme
-    classDef client fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
-    classDef resolver fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
-    classDef upstream fill:#0f172a,stroke:#2ea043,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
+    classDef device fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
+    classDef firewall fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
+    classDef vpn fill:#0f172a,stroke:#2ea043,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
     classDef blocked fill:#1e293b,stroke:#ef4444,stroke-width:2px,color:#ffffff,stroke-dasharray: 3 3;
 
-    TrustedClient["Trusted Client\n(VLAN 10/20/40)"]:::client
-    IoTDevice["IoT Device\n(VLAN 50)"]:::client
+    TrustedClient["Trusted Client\n(VLAN 10/20/40)"]:::device
+    IoTDevice["IoT Device\n(VLAN 50)"]:::device
 
-    TrustedClient -->|"DNS port 53"| Unbound["Edge Firewall\nUnbound Resolver"]:::resolver
+    TrustedClient -->|"DNS port 53"| Unbound["Edge Firewall\nUnbound Resolver"]:::firewall
     IoTDevice -->|"DNS NAT override\n(any dest → localhost:53)"| Unbound
 
-    Unbound -->|"DoT port 853"| CF["Cloudflare\n1.1.1.1"]:::upstream
-    Unbound -->|"DoT port 853"| Q9["Quad9\n9.9.9.9"]:::upstream
+    Unbound -->|"DoT port 853"| CF["Cloudflare\n1.1.1.1"]:::vpn
+    Unbound -->|"DoT port 853"| Q9["Quad9\n9.9.9.9"]:::vpn
 
     ExtDNS["External DNS\n(port 53)"]:::blocked
     ExtDoT["External DoT\n(port 853)"]:::blocked

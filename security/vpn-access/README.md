@@ -23,14 +23,14 @@ Tailscale eliminates this by using a coordination server and NAT traversal. The 
 ```mermaid
 flowchart TB
     %% Cyber Sec Grey/Blue Theme
-    classDef remote fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
-    classDef cloud fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
+    classDef device fill:#2d3748,stroke:#60a5fa,stroke-width:1px,color:#ffffff;
+    classDef internet fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
     classDef firewall fill:#1a1b26,stroke:#00d2ff,stroke-width:2px,color:#ffffff;
     classDef vlan fill:#1e293b,stroke:#3b82f6,stroke-width:2px,stroke-dasharray: 3 3,color:#ffffff;
     classDef vpn fill:#0f172a,stroke:#2ea043,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5;
 
-    RemoteDevice["Remote Device"]:::remote
-    TailscaleCloud["Tailscale Coordination"]:::cloud
+    RemoteDevice["Remote Device"]:::device
+    TailscaleCloud["Tailscale Coordination"]:::internet
     EdgeFW["Edge Firewall\n(Tailscale Node)"]:::firewall
 
     RemoteDevice -->|"WireGuard tunnel"| TailscaleCloud
