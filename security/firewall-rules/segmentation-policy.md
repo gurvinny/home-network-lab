@@ -117,8 +117,25 @@ This segmentation model provides:
 
 ---
 
+## 📋 Detailed Rule Documentation
+
+The high-level policies above are implemented as specific pfSense firewall rules. See the per-interface documentation for the exact rulesets, including SOC noise tuning rules:
+
+| Interface | Document | Key Highlights |
+|-----------|----------|----------------|
+| **WAN** | [`wan-rules.md`](./wan-rules.md) | Default-deny, bogon/RFC1918 blocks, QUIC noise suppression, Tailscale-only inbound |
+| **LAN** | [`lan-rules.md`](./lan-rules.md) | Trust-tiered admin access, DNS enforcement, DoT blocking, management lockdown |
+| **VLAN50 IoT** | [`vlan50-iot-rules.md`](./vlan50-iot-rules.md) | Full IoT isolation, DNS NAT override, Samsung/Deco noise tuning, single printer exception |
+
+For real-world traffic analysis against these rules, see the [Log Analysis](../log-analysis/) section.
+
+---
+
 ## 🚀 Future Improvements
 
+-   [x] **SOC Log Tuning:** Implemented `SOC_SILENCE_*` noise suppression framework
+-   [x] **DNS Enforcement:** DoT blocking + forced local resolver on all VLANs
+-   [x] **IoT DNS NAT Override:** Prevents firmware-hardcoded DNS bypass
 -   [ ] **IDS/IPS:** Deploy Suricata on VLAN 40/50 gateways.
 -   [ ] **GeoIP Blocking:** Block high-risk countries on the WAN.
 -   [ ] **Time-Based Rules:** Disable Kids' IoT access at night.
