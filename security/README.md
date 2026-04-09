@@ -67,6 +67,7 @@ flowchart TB
 | **Firewall Rules** | [`/firewall-rules`](./firewall-rules/) | Core pfSense rulesets enforcing segmentation, access control lists (ACLs), and inter-VLAN routing policies. |
 | **Intrusion Detection/Prevention** | [`/ids-ips`](./ids-ips/) | Suricata/Snort configurations for threat detection, malicious traffic blocking, and alerts. |
 | **Adblockers & DNS Filtering** | [`/adblockers`](./adblockers/) | pfBlockerNG and Pi-hole settings for network-wide ad blocking, malicious domain filtering, and DNS sinkholing. |
+| **Log Analysis** | [`/log-analysis`](./log-analysis/) | Real-world firewall log samples (redacted), traffic pattern analysis, reconnaissance identification, and SIEM readiness assessment. |
 
 ---
 
