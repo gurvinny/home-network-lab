@@ -220,8 +220,13 @@ home-network-lab/
 │   ├── adblockers/
 │   │   └── README.md
 │   ├── firewall-rules/
-│   │   └── segmentation-policy.md
-│   └── ids-ips/
+│   │   ├── segmentation-policy.md
+│   │   ├── wan-rules.md
+│   │   ├── lan-rules.md
+│   │   └── vlan50-iot-rules.md
+│   ├── ids-ips/
+│   │   └── README.md
+│   └── log-analysis/
 │       └── README.md
 └── README.md
 ```
@@ -238,6 +243,9 @@ This lab showcases practical experience in:
 -   **Infrastructure Hardening:** Securing management planes.
 -   **Attack Surface Reduction:** Minimizing the exposure of critical assets.
 -   **Enterprise Architecture:** Applying corporate security patterns to a small network.
+-   **SOC Log Tuning:** Building noise suppression frameworks for SIEM-ready log output.
+-   **Traffic Analysis:** Identifying reconnaissance patterns, port scanning, and threat actor behavior in real firewall logs.
+-   **DNS Security Enforcement:** Preventing DNS bypass via DoT blocking and IoT DNS NAT override.
 
 ---
 
@@ -245,12 +253,15 @@ This lab showcases practical experience in:
 
 Planned improvements for the lab:
 
+-   [x] **Zero-Trust:** Micro-segmentation implemented with per-device trust groups and IoT isolation.
+-   [ ] **SIEM Integration:** Ship logs to Wazuh or Elastic for correlation and alerting.
+-   [ ] **Threat Intel Enrichment:** Automate IP reputation checks against AbuseIPDB/VirusTotal.
+-   [ ] **Detection Rules:** Build correlation rules for scan detection (e.g., >20 ports from single IP in 5 minutes).
 -   [ ] **IDS/IPS Deployment:** Suricata for threat detection.
 -   [ ] **VPN Remote Access:** WireGuard for secure remote entry.
 -   [ ] **Network Monitoring:** Grafana/Prometheus dashboards.
 -   [ ] **Automated Backups:** Ansible playbooks for config management.
 -   [ ] **Attack Simulation:** Automated red team scenarios.
--   [ ] **Zero-Trust:** Experimenting with micro-segmentation.
 -   [ ] **Adblockers:** Deployment of pfBlockerNG / Pi-hole for DNS filtering.
 
 ---
