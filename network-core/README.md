@@ -1,58 +1,62 @@
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 ![Network](https://img.shields.io/badge/Network-Core-blue)
+![Platform](https://img.shields.io/badge/Platform-pfSense%20Plus-2ea043)
 
-# 🌐 Core Network Infrastructure
+# Core Network Infrastructure
 
-This directory documents the foundational physical and logical network layout of the Home Network Security Lab, detailing switch configurations, VLAN assignments, and routing topologies.
-
----
-
-## 📌 Network Architecture Overview
-
-The core network is designed for high-speed throughput (10GbE) combined with strict logical separation (VLAN tagging). The topology operates in a traditional "router-on-a-stick" methodology, with the pfSense firewall acting as the edge gateway and inter-VLAN router, while the MokerLink switch handles Layer 2 distribution.
-
-> **Security Rationale:** Centralizing inter-VLAN routing at the pfSense firewall ensures all traffic passing between security boundaries is subject to stateful inspection and access control lists (ACLs). This prevents unauthorized communication between trusted zones and IoT/Guest environments.
+This directory documents the physical and logical network layout of the Home Network Security Lab — switch configuration, VLAN assignments, and routing topology.
 
 ---
 
-## 🧰 Physical Hardware Summary
+## Network Architecture Overview
+
+The core network uses a **router-on-a-stick** topology: a single 10Gb SFP+ trunk carries all VLAN-tagged traffic between the managed switch and the edge firewall. The firewall performs all Layer 3 inter-VLAN routing and stateful inspection. The switch handles Layer 2 distribution and 802.1Q VLAN tagging.
+
+> **Rationale:** Centralising inter-VLAN routing at the edge firewall ensures all traffic crossing security zone boundaries is subject to stateful inspection and ACLs. This prevents any device from communicating across VLAN boundaries without passing through explicit firewall policy.
+
+---
+
+## Physical Hardware
 
 | Component | Model | Role |
 | :--- | :--- | :--- |
-| **Edge Gateway** | OEM Server Appliance (Atom C3758) | pfSense firewall; provides edge security, DHCP, DNS, and inter-VLAN routing. |
-| **Core Switch** | MokerLink 10G0800GTM | 10GbE Managed Switch; handles Layer 2 traffic and 802.1Q VLAN tagging. |
-| **Uplinks** | TP-Link TL-SM5310-T | 10GBase-T RJ45 SFP+ modules connecting the firewall to the switch and critical servers at 10Gbps. |
+| **Edge Gateway** | OEM Server Appliance (Intel Atom C3758) | pfSense Plus — edge security, DHCP, Unbound DNS, inter-VLAN routing |
+| **Core Switch** | MokerLink 10G0800GTM | 10GbE managed switching — Layer 2 distribution and 802.1Q VLAN tagging |
+| **SFP+ Uplinks** | TP-Link TL-SM5310-T | 10GBase-T RJ45 SFP+ — copper uplinks between firewall, switch, and high-speed servers |
+
+### Firewall Platform
+
+The firewall appliance runs **pfSense Plus** (upgraded from Community Edition). Key capabilities unlocked by Plus:
+
+- **QAT (Intel QuickAssist Technology)** — hardware acceleration for AES and RSA cryptographic operations. Offloads VPN and TLS handshake processing from CPU cores, maintaining throughput under Tailscale load.
+- **ZFS Filesystem** — replaces UFS for the pfSense installation. Provides checksumming, silent corruption detection, and snapshot support for configuration backups.
 
 ---
 
-## 🌐 Logical VLAN Structure
-
-The logical network relies on strict VLAN segmentation mapping specific subnets to device classifications.
+## Logical VLAN Structure
 
 | VLAN ID | Subnet | Name | Security Profile |
 | :--- | :--- | :--- | :--- |
-| **10** | `192.168.10.0/24` | Main | **Trusted** - General use devices (PCs, laptops). |
-| **20** | `192.168.20.0/24` | Management | **Restricted** - Infrastructure access only. |
-| **30** | `192.168.30.0/24` | Lab | **Isolated** - Malware testing and simulations. |
-| **40** | `192.168.40.0/24` | Servers | **Controlled** - NAS and hosted services. |
-| **50** | `192.168.50.0/24` | IoT | **Contained** - Smart home devices and appliances. |
-| **60** | `192.168.60.0/24` | Guest | **Internet-only** - Visiting device access. |
+| **10** | `192.168.10.0/24` | Main | **Trusted** — general-use workstations and personal devices |
+| **20** | `192.168.20.0/24` | Management | **Restricted** — infrastructure interfaces only |
+| **30** | `192.168.30.0/24` | Lab | **Isolated** — malware testing and attack simulation |
+| **40** | `192.168.40.0/24` | Servers | **Controlled** — NAS and hosted services |
+| **50** | `192.168.50.0/24` | IoT | **Contained** — smart home devices and appliances |
+| **60** | `192.168.60.0/24` | Guest | **Internet-only** — visiting device access |
 
 ---
 
-## 📑 Table of Contents
+## Contents
 
 | Configuration | Directory | Description |
 | :--- | :--- | :--- |
-| **Switch Configuration** | [`/switch-config`](./switch-config/) | Details port mappings, VLAN tagging (Trunk/Access), and management settings for the MokerLink 10G switch. |
+| **Switch Configuration** | [`/switch-config`](./switch-config/) | Port mappings, VLAN tagging (trunk/access), and management settings for the managed switch. |
 
 ---
 
-## 🚀 Future Additions
+## Roadmap
 
-The core network is planned for further enhancements to improve redundancy, traffic optimization, and routing capabilities.
-
--   [ ] **Quality of Service (QoS):** Implement traffic shaping on pfSense and the MokerLink switch to prioritize VoIP and gaming traffic over bulk downloads.
--   [ ] **Advanced Routing:** Explore deploying dynamic routing protocols (e.g., OSPF or BGP) internally to support redundant gateways or downstream lab routers.
--   [ ] **Link Aggregation (LACP/LAG):** Configure port bonding between the pfSense firewall and the core switch to increase inter-VLAN bandwidth and provide link redundancy.
--   [ ] **High Availability (HA):** Plan for a CARP setup with a secondary pfSense appliance to ensure seamless failover in the event of hardware failure.
+- [ ] **Quality of Service (QoS)** — Traffic shaping to prioritise latency-sensitive traffic over bulk downloads.
+- [ ] **Link Aggregation (LACP/LAG)** — Port bonding between the firewall and core switch for increased bandwidth and link redundancy.
+- [ ] **High Availability (HA)** — CARP setup with a secondary firewall appliance for seamless failover.
+- [ ] **Advanced Routing** — Explore OSPF internally for redundant gateway and downstream lab router support.
