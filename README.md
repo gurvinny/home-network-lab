@@ -232,29 +232,12 @@ This environment supports a wide range of security experiments:
 
 ## Repository Structure
 
-```text
-home-network-lab/
-├── network-core/
-│   ├── README.md
-│   └── switch-config/
-│       └── vlan-setup.md
-└── security/
-    ├── README.md
-    ├── firewall-rules/
-    │   ├── segmentation-policy.md
-    │   ├── wan-rules.md
-    │   ├── lan-rules.md
-    │   └── vlan50-iot-rules.md
-    ├── dns/
-    │   └── README.md
-    ├── vpn-access/
-    │   └── README.md
-    └── log-analysis/
-        ├── README.md
-        └── reports/
-            ├── report-template.md
-            └── 2026-04-analysis.md
-```
+- [network-core/](./network-core/) - Switch configuration and VLAN setup
+- [security/](./security/) - All security documentation
+  - [firewall-rules/](./security/firewall-rules/) - Rule sets, segmentation policy, and WAN/LAN rulesets
+  - [dns/](./security/dns/) - Forced DNS enforcement, DoT blocking, and Unbound configuration
+  - [vpn-access/](./security/vpn-access/) - Tailscale subnet router, exit node, and MagicDNS setup
+  - [log-analysis/](./security/log-analysis/) - Firewall log analysis methodology and reports
 
 ---
 
