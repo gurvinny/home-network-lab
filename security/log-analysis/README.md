@@ -46,16 +46,16 @@ pfSense `filterlog` entries use the RFC 5424 syslog envelope with a comma-separa
 
 The approach used for each analysis cycle:
 
-1. **Parse and validate** — confirm fields map correctly to the RFC 5424 schema and timestamps are well-formed.
-2. **Identify high-volume noise** — find broadcast, multicast, and vendor discovery traffic generating log volume with no security value.
-3. **Extract anomalies** — isolate inbound probes, unusual protocols, or unexpected internal traffic.
-4. **Classify by threat type** — map anomalies to known threat patterns (see table below).
-5. **Attribute intent** — differentiate malicious scanning from operational vendor traffic (e.g., Microsoft STUN) and academic/research scanning (e.g., Palo Alto Unit42, SURFnet).
-6. **Geo and threat intel enrichment** — look up source ASNs via ip-api.com/ipinfo.io and run top offenders through VirusTotal API v3.
-7. **Map to MITRE ATT&CK** — assign observed techniques to ATT&CK Enterprise technique IDs to contextualise findings within a standard framework.
-8. **Tune suppression rules** — create `SOC_SILENCE_*` rules for confirmed noise to reduce volume without losing the audit trail.
-9. **Correlate patterns** — identify repeat offender netblocks, targeted service clusters, and timing anomalies.
-10. **Document and report** — produce a structured report using the [standard template](./reports/report-template.md).
+1. **Parse and validate** - confirm fields map correctly to the RFC 5424 schema and timestamps are well-formed.
+2. **Identify high-volume noise** - find broadcast, multicast, and vendor discovery traffic generating log volume with no security value.
+3. **Extract anomalies** - isolate inbound probes, unusual protocols, or unexpected internal traffic.
+4. **Classify by threat type** - map anomalies to known threat patterns (see table below).
+5. **Attribute intent** - differentiate malicious scanning from operational vendor traffic (e.g., Microsoft STUN) and academic/research scanning (e.g., Palo Alto Unit42, SURFnet).
+6. **Geo and threat intel enrichment** - look up source ASNs via ip-api.com/ipinfo.io and run top offenders through VirusTotal API v3.
+7. **Map to MITRE ATT&CK** - assign observed techniques to ATT&CK Enterprise technique IDs to contextualise findings within a standard framework.
+8. **Tune suppression rules** - create `SOC_SILENCE_*` rules for confirmed noise to reduce volume without losing the audit trail.
+9. **Correlate patterns** - identify repeat offender netblocks, targeted service clusters, and timing anomalies.
+10. **Document and report** - produce a structured report using the [standard template](./reports/report-template.md).
 
 ---
 
@@ -116,8 +116,8 @@ Common techniques observed in this lab's WAN traffic:
 
 Rules prefixed `SOC_SILENCE_*` are dedicated noise-suppression rules. Their naming convention serves two purposes:
 
-1. **Analyst clarity** — `SOC_SILENCE_*` rules are immediately distinguishable from actual security policy. Analysts know these entries are confirmed noise, not events requiring investigation.
-2. **SIEM filter efficiency** — SIEM ingest pipelines can exclude `SOC_SILENCE_*` rule matches from alert queues while still retaining them for audit purposes.
+1. **Analyst clarity** - `SOC_SILENCE_*` rules are immediately distinguishable from actual security policy. Analysts know these entries are confirmed noise, not events requiring investigation.
+2. **SIEM filter efficiency** - SIEM ingest pipelines can exclude `SOC_SILENCE_*` rule matches from alert queues while still retaining them for audit purposes.
 
 Rules in use:
 
