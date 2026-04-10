@@ -2,9 +2,14 @@
 ![Platform](https://img.shields.io/badge/Platform-pfSense%20Plus-2ea043)
 ![Status](https://img.shields.io/badge/Status-Template-lightgrey)
 
-# Log Analysis Report — [MONTH YEAR]
+| | | | | |
+|:---:|:---:|:---:|:---:|:---:|
+| **~X,XXX** | **~X,XXX** | **~X%** | **~X** | **[Posture]** |
+| Total Log Entries | Unique Source IPs | Blocked | VT-Confirmed Malicious Hosts | Security Posture |
 
-> **Instructions:** Copy this file to `reports/YYYY-MM-analysis.md`. Fill in each section. Redact all external source IPs (replace with `[REDACTED_IP]` or `x.x.x.x`). Redact WAN IP (replace with `[REDACTED_WAN_IP]`). Internal RFC 1918 addresses may be shown. Remove this instruction block before publishing.
+# Log Analysis Report: [MONTH YEAR]
+
+> **Instructions:** Copy this file to `reports/FW-LAR-YYYY-MM-DD.md` (date = report completion date). Fill in each section. In log entry samples, redact all external source IPs with `[REDACTED_IP]` and the WAN IP with `[REDACTED_WAN_IP]`. In prose and tables, redact the last octet of individual IPs (e.g., `1.2.3.xxx`). Netblock notation (`x.x.x.0/24`) is acceptable. Internal RFC 1918 addresses may be shown as-is. Remove this instruction block before publishing.
 
 ---
 
@@ -16,13 +21,18 @@
 | **Capture Window** | HH:MM – HH:MM UTC±X (~X hours) |
 | **Interfaces Analysed** | e.g., WAN (ix1), VLAN50 (ix0.50) |
 | **Total Log Entries** | ~X,XXX |
+| **Unique External Source IPs** | ~X,XXX |
 | **Analyst** | Gurvin Singh |
 
 ---
 
 ## Executive Summary
 
-_2–3 sentences summarising the capture window, key findings, and any actions taken. Example: "During a 5.5-hour capture window, approximately 2,850 firewall log entries were recorded. The majority of inbound traffic on the WAN interface consisted of automated internet-wide scanning targeting common service ports. Internal noise from IoT devices on VLAN50 was identified and tuned via new SOC_SILENCE rules."_
+_2–3 sentences summarising the capture window, key findings, and any actions taken._
+
+### Risk Assessment
+
+_One sentence on security posture and one on the most significant validated finding. Example: "The security posture remains Hardened. All external probes were blocked with no lateral movement indicators. The most significant finding was [X], which validates the necessity of [Y]."_
 
 ---
 
@@ -34,9 +44,9 @@ Logs follow RFC 5424 syslog format via pfSense `filterlog`. See the [Log Analysi
 
 ## Sample Log Entries
 
-> All external source IPs redacted. WAN IP replaced with `[REDACTED_WAN_IP]`.
+> All external source IPs are redacted with `[REDACTED_IP]`. WAN IP replaced with `[REDACTED_WAN_IP]`. Internal RFC 1918 addresses shown as-is.
 
-### [Event Type — e.g., Reconnaissance: Port Scan]
+### [Event Type, e.g., Reconnaissance: Port Scan]
 
 ```text
 [Paste redacted log entry here]
@@ -46,7 +56,7 @@ Logs follow RFC 5424 syslog format via pfSense `filterlog`. See the [Log Analysi
 
 ---
 
-### [Event Type — e.g., Internal Noise: Device Broadcast]
+### [Event Type, e.g., Internal Noise: Device Broadcast]
 
 ```text
 [Paste redacted log entry here]
@@ -73,22 +83,45 @@ _(Add additional entries as needed.)_
 
 ## Reconnaissance / Threat Patterns Identified
 
-| Port | Protocol | Service | Classification | Volume | Disposition |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 23 | TCP | Telnet | Automated scan | High | Blocked (default deny) |
-| _[port]_ | _[proto]_ | _[service]_ | _[classification]_ | _[volume]_ | _[action]_ |
+| Port | Protocol | Service | Classification | Intent | Volume | Disposition |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 23 | TCP | Telnet | Botnet recruitment scan | Malicious | High | Blocked |
+| _[port]_ | _[proto]_ | _[service]_ | _[classification]_ | _[intent]_ | _[volume]_ | _[action]_ |
+
+> Intent key: **Malicious** = confirmed hostile scanning. **Operational** = legitimate vendor infrastructure (false positive). **Academic/Research** = internet measurement or threat intel collection. **Unknown** = internet-wide noise with no confirmed attribution.
+
+---
+
+## MITRE ATT&CK Technique Mapping
+
+> Mapped to MITRE ATT&CK Enterprise framework v15. All techniques represent the reconnaissance phase only. Default-deny WAN policy prevented any technique from progressing beyond initial contact.
+
+| Technique ID | Technique Name | Observed Behaviour | Source Example |
+| :--- | :--- | :--- | :--- |
+| T1595.001 | Active Scanning: Scanning IP Blocks | _[describe]_ | _[netblock]_ |
+| T1595.002 | Active Scanning: Vulnerability Scanning | _[describe]_ | _[netblock or redacted IP]_ |
+| T1046 | Network Service Discovery | _[describe]_ | _[ports observed]_ |
+| _[T-ID]_ | _[name]_ | _[behaviour]_ | _[source]_ |
+
+---
+
+## VirusTotal Scan Results
+
+> Top offenders scanned via VT API v3. Individual IPs have last octet redacted. All source IPs are active internet scanners blocked at the WAN.
+
+| IP (Redacted) | VT Malicious | VT Suspicious | Reputation | Country | ASN Owner | Last VT Scan |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `x.x.x.xxx` | X | X | X | [Country] | [ASN Owner] | YYYY-MM-DD |
 
 ---
 
 ## Repeat Offender Netblocks
 
-> External IPs redacted. ASN/geolocation enrichment listed where available.
+> Netblock notation is acceptable for threat intel purposes. Individual IPs in prose are last-octet redacted. ASN and geolocation sourced from ip-api.com, ipinfo.io, and VirusTotal.
 
-| Netblock (Redacted) | ASN | Country | Behaviour |
-| :--- | :--- | :--- | :--- |
-| `x.x.x.x/24` | ASxxxxx | [Country] | [Describe: sequential port scan, repeated SYN, etc.] |
-
-_In a production SOC, these would be cross-referenced against AbuseIPDB, VirusTotal, and OTX AlienVault._
+| Netblock | Hits | ASN | Country | Org | Behaviour |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `x.x.x.0/24` | X | ASxxxxx | [Country] | [Org] | [Describe behaviour] |
 
 ---
 
@@ -110,16 +143,15 @@ _In a production SOC, these would be cross-referenced against AbuseIPDB, VirusTo
 
 ## SIEM Readiness Notes
 
-_Observations about log quality, parsing compatibility, or enrichment opportunities specific to this capture window._
-
-- RFC 5424 format confirmed — compatible with [Splunk / Elastic / Wazuh / Sentinel].
+- RFC 5424 format confirmed, compatible with Splunk, Elastic/ELK, Wazuh, and Microsoft Sentinel.
 - Timestamp format: ISO 8601 with timezone offset.
 - Suggested enrichments: [GeoIP, threat intel lookup, etc.]
+- `SOC_SILENCE_*` rule prefix enables SIEM filter rules to exclude noise at ingest without losing the audit trail.
 
 ---
 
 ## Recommendations
 
-1. _[Action item derived from this analysis — e.g., "Add GeoIP enrichment to inbound block events"]_
-2. _[Action item — e.g., "Investigate repeat offender netblock x.x.x.x/24 against AbuseIPDB"]_
-3. _[Action item — e.g., "Create SIEM correlation rule: >20 unique dest ports from single source in 5 min"]_
+1. _[Action item derived from this analysis]_
+2. _[Action item]_
+3. _[Action item]_
