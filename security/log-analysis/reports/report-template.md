@@ -2,12 +2,11 @@
 ![Platform](https://img.shields.io/badge/Platform-pfSense%20Plus-2ea043)
 ![Status](https://img.shields.io/badge/Status-Template-lightgrey)
 
-| | | | | |
+# Log Analysis Report: [MONTH YEAR]
+
+| Total Log Entries | Unique Source IPs | Blocked | VT-Confirmed Malicious Hosts | Security Posture |
 |:---:|:---:|:---:|:---:|:---:|
 | **~X,XXX** | **~X,XXX** | **~X%** | **~X** | **[Posture]** |
-| Total Log Entries | Unique Source IPs | Blocked | VT-Confirmed Malicious Hosts | Security Posture |
-
-# Log Analysis Report: [MONTH YEAR]
 
 > **Instructions:** Copy this file to `reports/FW-LAR-YYYY-MM-DD.md` (date = report completion date). Fill in each section. In log entry samples, redact all external source IPs with `[REDACTED_IP]` and the WAN IP with `[REDACTED_WAN_IP]`. In prose and tables, redact the last octet of individual IPs (e.g., `1.2.3.xxx`). Netblock notation (`x.x.x.0/24`) is acceptable. Internal RFC 1918 addresses may be shown as-is. Remove this instruction block before publishing.
 
