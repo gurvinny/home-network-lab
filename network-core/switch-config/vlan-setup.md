@@ -27,7 +27,7 @@ graph TB
 
     subgraph Port_Assignments ["Switch Port Assignments"]
         direction TB
-        SW -->|"Port 2: Access (VLAN 20)"| MgmtHost["Management Host"]:::device
+        SW -->|"Port 2: Trunk (VLAN 20, 40, 70)"| ProxmoxHost["Proxmox Host"]:::device
         SW -->|"Port 3: Access (VLAN 10)"| TrustedHost1["Trusted Host A"]:::device
         SW -->|"Port 4: Access (VLAN 10)"| TrustedHost2["Trusted Host B"]:::device
         SW -->|"Port 5: Access (VLAN 40)"| FileServer["File Server"]:::device
@@ -54,6 +54,7 @@ graph TB
 | **40** | `SERVERS` | `192.168.40.0/24` | `192.168.40.1` | NAS, file server, hosted services |
 | **50** | `IOT` | `192.168.50.0/24` | `192.168.50.1` | Smart home devices, printers, cameras |
 | **60** | `GUEST` | `192.168.60.0/24` | `192.168.60.1` | Guest internet-only access |
+| **70** | `GAME_SERVER` | `192.168.70.0/24` | `192.168.70.1` | Game servers, strict ZTNA rules (Minecraft, etc.) |
 
 ---
 
@@ -137,7 +138,7 @@ APs that map SSIDs to VLANs require a trunk port.
 | Port | Device / Connection | Mode | VLAN Assignment | Purpose |
 | :--- | :--- | :--- | :--- | :--- |
 | **TE1** | Edge Firewall Uplink | Trunk | Tagged: 10–60 | Inter-VLAN routing pipeline |
-| **TE2** | Management Station | Access | VLAN 20 | Restrict admin access to management subnet |
+| **TE2** | Proxmox Host | Trunk | Native 20, Tagged: 40, 70 | Hypervisor carrying Management, Servers, and Game Servers |
 | **TE3** | Trusted Host A | Access | VLAN 10 | Trust boundary for primary workstation |
 | **TE4** | Trusted Host B | Access | VLAN 10 | Trust boundary for secondary workstation |
 | **TE5** | File Server | Access | VLAN 40 | Controls access to sensitive data |
