@@ -66,8 +66,10 @@ graph TD
 | **SFP+ Transceiver** | TP-Link TL-SM5310-T | 10GBase-T RJ45 uplink between firewall and switch |
 | **Trusted AP** | Wi-Fi 6E Mesh System | Trusted zone wireless connectivity |
 | **Segmented AP** | Next-Gen Wi-Fi Router | Dedicated IoT and guest wireless isolation |
-| **Lab Servers** | Home lab server hardware | Security lab testing and hosted services |
-| **Storage** | NAS appliance | Data and service hosting |
+| **Proxmox Host** | Lenovo M70q (i7-12th gen, 64GB RAM) | Primary virtualization node for servers and core services |
+| **Wazuh Manager** | Ubuntu Server Pro VM | Primary SIEM and log aggregation platform (Livepatch & USG Hardened) |
+| **Authentik** | Ubuntu Server Pro VM | Centralized Identity Provider (IdP) for Zero Trust passkey access (Livepatch & USG Hardened) |
+| **Game Server** | Isolated VM | Minecraft server with dedicated ZTNA rules |
 
 ### Firewall Appliance Specifications
 
@@ -78,6 +80,14 @@ graph TD
 - **OS:** pfSense Plus (upgraded from CE) — enables QAT driver support and improved ZFS integration.
 
 > **Why pfSense Plus:** The CE → Plus upgrade unlocked QAT hardware crypto offloading (accelerates VPN/TLS handshakes) and first-class ZFS support for filesystem integrity and snapshot-based backups.
+
+---
+
+## 🌟 Recruiter Showcase: Enterprise SIEM & Zero Trust
+
+If you are a recruiter or hiring manager reviewing this repository, please check out the dedicated **[Wazuh SIEM & Threat Intelligence Showcase](./security/wazuh.md)**.
+
+This document provides a high-level, business-focused overview of how I deployed Wazuh on **Ubuntu Server Pro** utilizing **Canonical Livepatch** and achieved a **92% CIS Level 2** compliance score, demonstrating enterprise-grade security operations (SecOps) capabilities within this lab.
 
 ---
 
@@ -174,6 +184,7 @@ flowchart TB
 | **VLAN 40** | `192.168.40.0/24` | Servers, NAS, hosted services | **Controlled** |
 | **VLAN 50** | `192.168.50.0/24` | IoT and smart home devices | **Contained** |
 | **VLAN 60** | `192.168.60.0/24` | Guest network — internet-only access | **Internet-only** |
+| **VLAN 70** | `192.168.70.0/24` | Game Servers — strict ZTNA isolation (e.g., Minecraft) | **Isolated** |
 
 ---
 
@@ -234,10 +245,11 @@ This environment supports a wide range of security experiments:
 
 - [network-core/](./network-core/) - Switch configuration and VLAN setup
 - [security/](./security/) - All security documentation
-  - [firewall-rules/](./security/firewall-rules/) - Rule sets, segmentation policy, and WAN/LAN rulesets
+  - [firewall-rules/](./security/firewall-rules/) - Rule sets, Game Server Zero Trust (ZTNA), and WAN/LAN rulesets
   - [dns/](./security/dns/) - Forced DNS enforcement, DoT blocking, and Unbound configuration
   - [vpn-access/](./security/vpn-access/) - Tailscale subnet router, exit node, and MagicDNS setup
-  - [log-analysis/](./security/log-analysis/) - Firewall log analysis methodology and reports
+  - [log-analysis/](./security/log-analysis/) - Firewall log analysis methodology, Wazuh hardening, and reports
+  - [iam/](./security/iam/) - Identity and Access Management (Authentik Passkeys)
 
 ---
 
@@ -274,6 +286,7 @@ This lab showcases practical experience with:
 | Planned | Network monitoring — Grafana / Prometheus dashboards |
 | Planned | Adblocker / DNS sinkhole — pfBlockerNG for malicious domain filtering |
 | Planned | Automated config backups — Ansible playbooks |
+| Planned | Dev Server web app hosting — Next.js and Vite local deployments |
 
 ---
 
