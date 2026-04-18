@@ -10,7 +10,7 @@ This document outlines the deployment, storage partitioning, and system hardenin
 
 ## 📈 System Hardening (CIS Level 2)
 
-The Wazuh Manager is hosted on an Ubuntu Server virtual machine within the Management VLAN (VLAN 20). The operating system has been rigorously hardened, achieving a **92% CIS (Center for Internet Security) Level 2 Server score**.
+The Wazuh Manager is hosted on an **Ubuntu Server Pro** virtual machine within the Management VLAN (VLAN 20). By utilizing Ubuntu Pro, the server benefits from **Canonical Livepatch** (for zero-downtime kernel security updates) and the **Ubuntu Security Guide (USG)**. The operating system has been rigorously hardened using USG, achieving a **92% CIS (Center for Internet Security) Level 2 Server score**.
 
 > **Security Rationale:** SIEM infrastructure is a high-value target as it contains sensitive log data, alerting logic, and administrative configurations. Hardening the underlying OS to CIS Level 2 standards significantly reduces the attack surface, disabling unnecessary services and enforcing strict access controls.
 
@@ -18,7 +18,7 @@ The Wazuh Manager is hosted on an Ubuntu Server virtual machine within the Manag
 
 ## 🗄️ Security-Based Partitioning
 
-To comply with CIS recommendations and prevent denial-of-service (DoS) conditions caused by disk exhaustion (log overflow), the Ubuntu Server utilizes a strict partition scheme.
+To comply with CIS recommendations and prevent denial-of-service (DoS) conditions caused by disk exhaustion (log overflow), the Ubuntu Server Pro instance utilizes a strict partition scheme.
 
 A dedicated partition is allocated for `/var/ossec` to isolate Wazuh's data processing overhead from the core operating system.
 

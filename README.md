@@ -67,8 +67,8 @@ graph TD
 | **Trusted AP** | Wi-Fi 6E Mesh System | Trusted zone wireless connectivity |
 | **Segmented AP** | Next-Gen Wi-Fi Router | Dedicated IoT and guest wireless isolation |
 | **Proxmox Host** | Lenovo M70q (i7-12th gen, 64GB RAM) | Primary virtualization node for servers and core services |
-| **Wazuh Manager** | Ubuntu Server VM | Primary SIEM and log aggregation platform |
-| **Authentik** | Ubuntu Server VM | Centralized Identity Provider (IdP) for Zero Trust passkey access |
+| **Wazuh Manager** | Ubuntu Server Pro VM | Primary SIEM and log aggregation platform (Livepatch & USG Hardened) |
+| **Authentik** | Ubuntu Server Pro VM | Centralized Identity Provider (IdP) for Zero Trust passkey access (Livepatch & USG Hardened) |
 | **Game Server** | Isolated VM | Minecraft server with dedicated ZTNA rules |
 
 ### Firewall Appliance Specifications
@@ -80,6 +80,14 @@ graph TD
 - **OS:** pfSense Plus (upgraded from CE) — enables QAT driver support and improved ZFS integration.
 
 > **Why pfSense Plus:** The CE → Plus upgrade unlocked QAT hardware crypto offloading (accelerates VPN/TLS handshakes) and first-class ZFS support for filesystem integrity and snapshot-based backups.
+
+---
+
+## 🌟 Recruiter Showcase: Enterprise SIEM & Zero Trust
+
+If you are a recruiter or hiring manager reviewing this repository, please check out the dedicated **[Wazuh SIEM & Threat Intelligence Showcase](./security/wazuh.md)**.
+
+This document provides a high-level, business-focused overview of how I deployed Wazuh on **Ubuntu Server Pro** utilizing **Canonical Livepatch** and achieved a **92% CIS Level 2** compliance score, demonstrating enterprise-grade security operations (SecOps) capabilities within this lab.
 
 ---
 
