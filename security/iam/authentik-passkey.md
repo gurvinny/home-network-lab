@@ -10,7 +10,7 @@ This document outlines the deployment of Authentik as an Identity Provider (IdP)
 
 ## 🏛️ Architecture & Deployment
 
-Authentik is hosted as a virtual machine within the isolated **Management VLAN (VLAN 20)**. It serves as the centralized authentication gateway for critical infrastructure services.
+Authentik is hosted as a virtual machine on **Ubuntu Server Pro** within the isolated **Management VLAN (VLAN 20)**. The OS is hardened using the Ubuntu Security Guide (USG) and utilizes Canonical Livepatch for non-disruptive security patching. It serves as the centralized authentication gateway for critical infrastructure services.
 
 ### DNS & TLS Certificate Routing
 To ensure secure communication between internal services without exposing them to the internet, traffic is routed locally using pfSense:
