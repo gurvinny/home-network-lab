@@ -66,8 +66,10 @@ graph TD
 | **SFP+ Transceiver** | TP-Link TL-SM5310-T | 10GBase-T RJ45 uplink between firewall and switch |
 | **Trusted AP** | Wi-Fi 6E Mesh System | Trusted zone wireless connectivity |
 | **Segmented AP** | Next-Gen Wi-Fi Router | Dedicated IoT and guest wireless isolation |
-| **Lab Servers** | Home lab server hardware | Security lab testing and hosted services |
-| **Storage** | NAS appliance | Data and service hosting |
+| **Proxmox Host** | Lenovo M70q (i7-12th gen, 64GB RAM) | Primary virtualization node for servers and core services |
+| **Wazuh Manager** | Ubuntu Server VM | Primary SIEM and log aggregation platform |
+| **Authentik** | Ubuntu Server VM | Centralized Identity Provider (IdP) for Zero Trust passkey access |
+| **Game Server** | Isolated VM | Minecraft server with dedicated ZTNA rules |
 
 ### Firewall Appliance Specifications
 
@@ -174,6 +176,7 @@ flowchart TB
 | **VLAN 40** | `192.168.40.0/24` | Servers, NAS, hosted services | **Controlled** |
 | **VLAN 50** | `192.168.50.0/24` | IoT and smart home devices | **Contained** |
 | **VLAN 60** | `192.168.60.0/24` | Guest network — internet-only access | **Internet-only** |
+| **VLAN 70** | `192.168.70.0/24` | Game Servers — strict ZTNA isolation (e.g., Minecraft) | **Isolated** |
 
 ---
 
@@ -234,10 +237,11 @@ This environment supports a wide range of security experiments:
 
 - [network-core/](./network-core/) - Switch configuration and VLAN setup
 - [security/](./security/) - All security documentation
-  - [firewall-rules/](./security/firewall-rules/) - Rule sets, segmentation policy, and WAN/LAN rulesets
+  - [firewall-rules/](./security/firewall-rules/) - Rule sets, Game Server Zero Trust (ZTNA), and WAN/LAN rulesets
   - [dns/](./security/dns/) - Forced DNS enforcement, DoT blocking, and Unbound configuration
   - [vpn-access/](./security/vpn-access/) - Tailscale subnet router, exit node, and MagicDNS setup
-  - [log-analysis/](./security/log-analysis/) - Firewall log analysis methodology and reports
+  - [log-analysis/](./security/log-analysis/) - Firewall log analysis methodology, Wazuh hardening, and reports
+  - [iam/](./security/iam/) - Identity and Access Management (Authentik Passkeys)
 
 ---
 
@@ -274,6 +278,7 @@ This lab showcases practical experience with:
 | Planned | Network monitoring — Grafana / Prometheus dashboards |
 | Planned | Adblocker / DNS sinkhole — pfBlockerNG for malicious domain filtering |
 | Planned | Automated config backups — Ansible playbooks |
+| Planned | Dev Server web app hosting — Next.js and Vite local deployments |
 
 ---
 
