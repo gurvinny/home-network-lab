@@ -1,6 +1,6 @@
-![Category](https://img.shields.io/badge/Category-Firewall%20Rules-blue)
-![Platform](https://img.shields.io/badge/Platform-pfSense%20Plus-2ea043)
-![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+![Category](https://img.shields.io/badge/Category-Firewall_Rules-blue?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-pfSense_Plus-2ea043?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
 
 # VLAN50 IoT Firewall Rules
 
