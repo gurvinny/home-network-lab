@@ -4,7 +4,7 @@
 
 # 🖥️ Proxmox Virtual Infrastructure
 
-This document details the hardware and virtual networking configuration for the primary virtualization host (Lenovo M70q), specifically focusing on segmentation, VLAN tagging, and the integration of core services like Wazuh and Authentik.
+This document details the hardware and virtual networking configuration for the primary virtualization host (Lenovo M70q), specifically focusing on segmentation, VLAN tagging, and the placement of core services such as Wazuh and Authentik.
 
 ---
 
@@ -15,7 +15,7 @@ The virtualization host is a micro form-factor system optimized for high core co
 * **Model:** Lenovo M70q
 * **CPU:** Intel Core i7-12th Gen T-Series
 * **Memory:** 64GB DDR4 (3200MHz)
-* **Hypervisor:** Proxmox VE
+* **Hypervisor:** Proxmox VE 9.x
 
 > **Security Rationale:** Utilizing an energy-efficient micro node allows for continuous operation with reduced thermal footprint while providing sufficient computational resources to segment services securely via virtualization rather than relying on containerized isolation on a single host.
 
@@ -39,8 +39,12 @@ The Proxmox host is connected to **Port 2** on the MokerLink switch. To support 
 | **Proxmox Host** | Hypervisor / Management | 20 (Mgmt) | `192.168.20.0/24` |
 | **Wazuh Manager** | SIEM / Log Aggregation | 20 (Mgmt) | `192.168.20.0/24` |
 | **Authentik** | Identity Provider (IdP) | 20 (Mgmt) | `192.168.20.0/24` |
-| **Dev Server** | Local App Testing | 70 (Game Servers) | `192.168.70.0/24` |
-| **Game Server** | Minecraft Server | 70 (Game Servers) | `192.168.70.0/24` |
+| **Dev Server** | Local app hosting and testing | 40 (Servers) | `192.168.40.0/24` |
+| **Self-Hosted Applications** | File sync, home automation, media | 40 (Servers) | `192.168.40.0/24` |
+| **Game Server Control Panel** | Orchestrates the isolated game node | 40 (Servers) | `192.168.40.0/24` |
+| **Game Server Node** | Game workload under ZTNA rules | 70 (Game Servers) | `192.168.70.0/24` |
+
+> **Why the game control plane and its node are split:** the panel sits on VLAN 40 while the workload it manages sits alone on VLAN 70. Compromising the internet-facing node therefore yields a segment containing exactly one host — not the panel, its database, or any other service. See [`../security/firewall-rules/game-server-ztna.md`](../security/firewall-rules/game-server-ztna.md).
 
 ---
 
@@ -53,6 +57,7 @@ graph TD
     classDef switch fill:#2b2b2b,stroke:#00a8ff,stroke-width:2px,color:#ffffff
     classDef proxmox fill:#1a1a1a,stroke:#00a8ff,stroke-width:2px,color:#ffffff
     classDef vmMgmt fill:#2b2b2b,stroke:#ff3333,stroke-width:2px,color:#ffffff
+    classDef vmServer fill:#2b2b2b,stroke:#3b82f6,stroke-width:2px,color:#ffffff
     classDef vmGame fill:#2b2b2b,stroke:#00cc66,stroke-width:2px,color:#ffffff
 
     FW["pfSense Firewall"]:::firewall -->|"10G SFP+"| SW["MokerLink Switch"]:::switch
@@ -68,9 +73,14 @@ graph TD
             MGMT_BR --> AUTH["Authentik IdP"]:::vmMgmt
         end
 
+        subgraph "VLAN 40 (Servers)"
+            VLAN_BR --> DEV["Dev / App Hosting"]:::vmServer
+            VLAN_BR --> APPS["Self-Hosted Applications"]:::vmServer
+            VLAN_BR --> PANEL["Game Control Panel"]:::vmServer
+        end
+
         subgraph "VLAN 70 (Game Servers)"
-            VLAN_BR --> GAME["Minecraft Server"]:::vmGame
-            VLAN_BR --> DEV["Dev Server"]:::vmGame
+            VLAN_BR --> GAME["Game Server Node"]:::vmGame
         end
     end
 ```

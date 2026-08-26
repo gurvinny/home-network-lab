@@ -1,6 +1,6 @@
-![Category](https://img.shields.io/badge/Category-Log%20Analysis-blue)
-![Platform](https://img.shields.io/badge/Platform-pfSense%20Plus-2ea043)
-![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+![Category](https://img.shields.io/badge/Category-Log_Analysis-blue?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-pfSense_Plus-2ea043?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
 
 # Log Analysis
 
@@ -129,7 +129,14 @@ Rules in use:
 | `SOC_SILENCE_DECO_DISCOVERY` | UDP 20002 TP-Link Deco mesh discovery beacons |
 | `SOC_SILENCE_QUIC_NOISE` | UDP 443 QUIC from CDNs and browsers |
 | `SOC_SILENCE_TCP_GHOSTS` | TCP to ghost ports with no matching service |
-| `SOC_SILENCE_IOT_NOISE` | Chatty IoT device broadcast traffic |
+| `SOC_SILENCE_IOT_NOISE` | Chatty IoT device broadcast traffic (`CHATTY_IOT_PORTS` alias) |
+| `SOC_SILENCE_LAN_IPV6_LEAK` | IPv6 leakage on the trusted LAN |
+| `SOC_SILENCE_IOT_IPV6` | IPv6 leakage on the IoT segment |
+| `SOC_SILENCE_MDNS_IPV6` | IPv6 mDNS handled explicitly rather than left to the catch-all deny |
+
+Two further suppressions are unnamed but follow the same intent: IPv6 WAN multicast, and the upstream modem's `192.168.1.0/24` management leak.
+
+> **Why `SOC_SILENCE_MDNS_IPV6` is a pass rule:** the prefix marks a rule as *noise-handling*, not as *blocking*. Service discovery must work, but it should not be evaluated by — or logged through — the general policy stack. Naming it with the same prefix keeps every noise decision findable in one grep, whichever direction it resolves.
 
 ---
 
@@ -143,7 +150,9 @@ All reports follow a consistent redaction standard to protect operational securi
 | Log entry samples (WAN/dest IP) | Fully redacted as `[REDACTED_WAN_IP]` |
 | Prose and table references (individual IPs) | Last octet redacted: `1.2.3.xxx` |
 | Repeat Offender table (netblocks) | Shown as-is: `x.x.x.0/24` (public threat intel) |
-| Internal RFC 1918 addresses | Shown as-is |
+| Internal RFC 1918 addresses | Shown as-is — non-routable, and the evidence depends on them |
+| Internal hostnames | Replaced with a generic placeholder (e.g. `edge-firewall`) |
+| WAN address, ISP identifiers, device serials | Never published in any form |
 
 ---
 
@@ -189,6 +198,8 @@ pfSense `filterlog` logs are well-suited for SIEM ingestion:
 - **Volume control:** `SOC_SILENCE_*` rules reduce log volume before ingestion, keeping storage costs and alert fatigue low.
 - **Threat intel enrichment:** Top offending IPs are submitted to VirusTotal API v3 (rate limited to 4 requests/min on the free plan). GeoIP and ASN attribution via ip-api.com and ipinfo.io.
 
+**SIEM status.** The Wazuh manager is deployed and ingesting host agents; see [`wazuh-hardening.md`](./wazuh-hardening.md) for its hardening baseline and [`../wazuh.md`](../wazuh.md) for the deployment overview. Forwarding pfSense's own `filterlog` stream into it — with custom decoders for the format documented above — is the next step, and is what the enhancements below depend on.
+
 **Planned SIEM enhancements:**
 - GeoIP tagging on all inbound WAN block events.
 - Automated VirusTotal lookup for any source IP exceeding 50 blocked events per hour.
@@ -201,6 +212,8 @@ pfSense `filterlog` logs are well-suited for SIEM ingestion:
 ## Analysis Reports
 
 Reports are stored in the [`reports/`](./reports/) directory and named using the `FW-LAR-YYYY-MM-DD.md` convention.
+
+The report below is the lab's **published baseline** — a full 25-hour capture window analysed end to end, kept as the reference example of the methodology rather than as a running log. Subsequent tuning has been applied directly to the ruleset; the next published report is intended to follow the pfSense-to-Wazuh integration, so that correlation results can be included rather than manual analysis alone.
 
 | Report | Period | Entries | Key Findings |
 | :--- | :--- | :--- | :--- |

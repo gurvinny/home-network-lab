@@ -1,6 +1,6 @@
-![Status](https://img.shields.io/badge/Status-Active-brightgreen)
-![Network](https://img.shields.io/badge/Network-Core-blue)
-![Platform](https://img.shields.io/badge/Platform-pfSense%20Plus-2ea043)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
+![Network](https://img.shields.io/badge/Network-Core-blue?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-pfSense_Plus-2ea043?style=for-the-badge)
 
 # Core Network Infrastructure
 
@@ -28,7 +28,7 @@ The core network uses a **router-on-a-stick** topology: a single 10Gb SFP+ trunk
 
 The firewall appliance runs **pfSense Plus** (upgraded from Community Edition). Key capabilities unlocked by Plus:
 
-- **QAT (Intel QuickAssist Technology)** — hardware acceleration for AES and RSA cryptographic operations. Offloads VPN and TLS handshake processing from CPU cores, maintaining throughput under Tailscale load.
+- **QAT (Intel QuickAssist Technology)** — hardware acceleration for AES and RSA cryptographic operations. Offloads VPN and TLS handshake processing from CPU cores, maintaining throughput under WireGuard and mesh VPN load.
 - **ZFS Filesystem** — replaces UFS for the pfSense installation. Provides checksumming, silent corruption detection, and snapshot support for configuration backups.
 
 ---
@@ -38,11 +38,12 @@ The firewall appliance runs **pfSense Plus** (upgraded from Community Edition). 
 | VLAN ID | Subnet | Name | Security Profile |
 | :--- | :--- | :--- | :--- |
 | **10** | `192.168.10.0/24` | Main | **Trusted** — general-use workstations and personal devices |
-| **20** | `192.168.20.0/24` | Management | **Restricted** — infrastructure interfaces only |
-| **30** | `192.168.30.0/24` | Lab | **Isolated** — malware testing and attack simulation |
-| **40** | `192.168.40.0/24` | Servers | **Controlled** — NAS and hosted services |
+| **20** | `192.168.20.0/24` | Management | **Restricted** — hypervisor, SIEM, identity provider, infrastructure interfaces |
+| **40** | `192.168.40.0/24` | Servers | **Controlled** — self-hosted applications and development hosting |
 | **50** | `192.168.50.0/24` | IoT | **Contained** — smart home devices and appliances |
-| **60** | `192.168.60.0/24` | Guest | **Internet-only** — visiting device access |
+| **70** | `192.168.70.0/24` | Game Servers | **Isolated** — internet-facing workloads under ZTNA rules |
+
+Each VLAN's `.1` address serves as both the default gateway and the DNS resolver for that segment. There is no separate DNS host; the firewall answers resolution for every network it routes.
 
 ---
 
@@ -51,6 +52,7 @@ The firewall appliance runs **pfSense Plus** (upgraded from Community Edition). 
 | Configuration | Directory | Description |
 | :--- | :--- | :--- |
 | **Switch Configuration** | [`/switch-config`](./switch-config/) | Port mappings, VLAN tagging (trunk/access), and management settings for the managed switch. |
+| **Proxmox Networking** | [`proxmox-networking.md`](./proxmox-networking.md) | Hypervisor hardware, trunk port configuration, bridge tagging, and VM-to-VLAN placement. |
 
 ---
 

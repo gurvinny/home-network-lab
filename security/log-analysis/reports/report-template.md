@@ -1,6 +1,6 @@
-![Category](https://img.shields.io/badge/Category-Log%20Analysis%20Report-blue)
-![Platform](https://img.shields.io/badge/Platform-pfSense%20Plus-2ea043)
-![Status](https://img.shields.io/badge/Status-Template-lightgrey)
+![Category](https://img.shields.io/badge/Category-Log_Analysis_Report-blue?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-pfSense_Plus-2ea043?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Template-lightgrey?style=for-the-badge)
 
 # Log Analysis Report: [MONTH YEAR]
 

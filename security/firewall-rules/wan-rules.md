@@ -1,12 +1,12 @@
-![Category](https://img.shields.io/badge/Category-Firewall%20Rules-blue)
-![Platform](https://img.shields.io/badge/Platform-pfSense%20Plus-2ea043)
-![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+![Category](https://img.shields.io/badge/Category-Firewall_Rules-blue?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-pfSense_Plus-2ea043?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
 
 # WAN Firewall Rules
 
 ## Overview
 
-This document details the firewall rules applied to the WAN interface (`ix1`), evaluated top-to-bottom. The WAN policy is **default-deny** — the only allowed inbound traffic is Tailscale. All other inbound connections are blocked before reaching the firewall or any internal service.
+This document details the firewall rules applied to the WAN interface (`ix1`), evaluated top-to-bottom. The WAN policy is **default-deny** — the only allowed inbound traffic is the VPN listener. All other inbound connections are blocked before reaching the firewall or any internal service.
 
 ---
 
@@ -19,13 +19,18 @@ This document details the firewall rules applied to the WAN interface (`ix1`), e
 | 3 | Block | IPv6 ICMP | Any | `ff02::1` | Any | Suppress IPv6 WAN multicast noise |
 | 4 | Block | IPv4 UDP | Any | WAN address | 443 | `SOC_SILENCE_QUIC_NOISE` — suppress QUIC log pollution |
 | 5 | Block | IPv4 Any | `192.168.1.0/24` | Any | Any | Suppress modem management subnet leak |
-| 6 | Pass | IPv4 UDP | Any | WAN address | 41641 | Allow Tailscale direct connect (WireGuard) |
+| 6 | Pass | IPv4 UDP | Any | WAN address | VPN listener | Allow WireGuard tunnel establishment |
+| 7 | Block | IPv4 TCP/UDP | Any | Any | Any | Implicit default deny — everything else |
+
+Two game-server port forwards previously existed for direct external play. Both are **disabled**; the workload is now reached through the VPN instead of an open port.
 
 ---
 
 ## Key Takeaways
 
-**Tailscale is the only inbound allow.** No SSH, no web UI, no traditional VPN port is exposed to the internet. The WAN is effectively invisible to all scanners except Tailscale's WireGuard handshake port (`UDP 41641`). Tailscale acts as both subnet router and exit node — see [`../vpn-access/README.md`](../vpn-access/README.md) for full configuration details.
+**The VPN listener is the only inbound allow.** No SSH, no web UI, no management interface, and no game-server port is reachable from the internet. The single permitted endpoint is the WireGuard listener, which is silent to unauthenticated traffic — a packet without a valid key gets no response at all, so the port does not answer scanners the way a TCP service would. A Tailscale mesh runs alongside it and needs no inbound rule; see [`../vpn-access/README.md`](../vpn-access/README.md) for both paths and why the lab runs each.
+
+**Disabled forwards stay disabled and documented.** The game-server forwards are retained in the configuration in a disabled state rather than deleted, so the decision remains visible during review instead of silently disappearing from the ruleset.
 
 **RFC 1918 and bogon blocks** prevent spoofed private-range sources from being processed by any firewall rule lower in the stack. This is a foundational antispoofing control.
 

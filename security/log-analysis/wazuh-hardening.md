@@ -38,6 +38,6 @@ The following enhancements are planned for the Wazuh SIEM deployment to increase
 
 - [ ] **pfSense Syslog Ingestion:** Configure pfSense to forward firewall logs (syslog) to the Wazuh Manager.
 - [ ] **Custom Decoders & Rules:** Develop custom decoders and alerting rules specifically tailored to pfSense firewall events.
-- [ ] **Honeypot Deployment:** Deploy a honeypot server in an isolated VLAN and integrate its logs with Wazuh for proactive threat monitoring.
-- [ ] **Minecraft Log Integration:** Feed Minecraft server logs into Wazuh to monitor for abuse, unauthorized access attempts, or application-level attacks.
+- [ ] **Honeypot Deployment:** Deploy a honeypot in an isolated segment and integrate its logs with Wazuh for proactive threat monitoring.
+- [ ] **Game Server Log Integration:** Feed game server logs into Wazuh to monitor for abuse, unauthorized access attempts, or application-level attacks.
 - [ ] **Dashboard Optimization:** Build and optimize custom Wazuh dashboards specifically for visualizing pfSense traffic and Game Server metrics.
