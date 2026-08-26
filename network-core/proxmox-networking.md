@@ -41,7 +41,6 @@ The Proxmox host is connected to **Port 2** on the MokerLink switch. To support 
 | **Authentik** | Identity Provider (IdP) | 20 (Mgmt) | `192.168.20.0/24` |
 | **Dev Server** | Local app hosting and testing | 40 (Servers) | `192.168.40.0/24` |
 | **Self-Hosted Applications** | File sync, home automation, media | 40 (Servers) | `192.168.40.0/24` |
-| **Web SSH Jump Host** | Audited SSH gateway to other segments | 40 (Servers) | `192.168.40.0/24` |
 | **Game Server Control Panel** | Orchestrates the isolated game node | 40 (Servers) | `192.168.40.0/24` |
 | **Game Server Node** | Game workload under ZTNA rules | 70 (Game Servers) | `192.168.70.0/24` |
 
@@ -77,7 +76,6 @@ graph TD
         subgraph "VLAN 40 (Servers)"
             VLAN_BR --> DEV["Dev / App Hosting"]:::vmServer
             VLAN_BR --> APPS["Self-Hosted Applications"]:::vmServer
-            VLAN_BR --> JUMP["Web SSH Jump Host"]:::vmServer
             VLAN_BR --> PANEL["Game Control Panel"]:::vmServer
         end
 

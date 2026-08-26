@@ -202,7 +202,6 @@ A single Proxmox node hosts the lab's services, each placed on the VLAN matching
 | **Proxmox VE** | Hypervisor and management plane | 20 | Management interfaces never share a segment with workloads |
 | **Wazuh** | SIEM, XDR, FIM, vulnerability detection | 20 | Log destination must survive compromise of any monitored segment |
 | **Authentik** | Identity provider — OIDC + passkey enforcement | 20 | Authentication authority sits inside the protected management plane |
-| **Web SSH Jump Host** | Browser-based SSH gateway to other segments | 40 | Single audited entry point instead of per-segment SSH exposure |
 | **File Sync** | Self-hosted file storage and sync | 40 | Holds data, so it stays out of both management and untrusted zones |
 | **Home Automation** | Home Assistant controller | 40 | Needs to *initiate* to IoT, so it is placed above IoT, never inside it |
 | **Media Server** | Self-hosted media streaming | 40 | Standard application workload |
@@ -231,17 +230,17 @@ Traffic policy enforces strict least-privilege segmentation. Inter-VLAN routing 
 
 ## Trusted Admin Path
 
-Default-deny between segments is the rule for every device on the network **except** a named alias of administrative endpoints, which is permitted to cross into any VLAN.
+Default-deny is the posture for every device on the network. Administrative access is the exception, and it is handled by a named alias rather than by trusting a whole VLAN.
 
 | Property | Implementation |
 | :--- | :--- |
 | **Mechanism** | A pfSense alias containing a small, fixed set of admin devices |
-| **Scope** | Cross-VLAN reach including management ports on the firewall itself |
+| **Scope** | Broader reach than any ordinary host, granted per rule rather than blanket-permitted |
 | **Why it exists** | Segmentation without a break-glass path produces shadow workarounds — an admin locked out of their own management plane will eventually punch a wider hole than this one |
 | **Containment** | Membership is explicit and enumerable; every other host, including every server on VLAN 40, is subject to full default-deny |
-| **Residual risk** | Compromise of an admin endpoint bypasses segmentation. Mitigated by passkey-enforced SSO on management interfaces and SIEM monitoring of the alias's traffic |
+| **Residual risk** | Compromise of an admin endpoint is the highest-value path on the network. Mitigated by passkey-enforced SSO on management interfaces and SIEM monitoring of the alias's traffic |
 
-> **Why document it:** Publishing a segmentation model while quietly running a device that ignores it would misrepresent the posture. The honest version — a deliberate, minimal, monitored exception — is the one that survives an interview.
+> **Why document it:** A segmentation model that quietly exempts one device misrepresents its own posture. Naming the exception — deliberate, minimal, monitored, and enforced by alias rather than by subnet — is what makes the rest of the model credible.
 
 ---
 
