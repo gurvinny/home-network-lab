@@ -1,6 +1,6 @@
-![Category](https://img.shields.io/badge/Category-Network%20Configuration-blue)
-![Device](https://img.shields.io/badge/Device-Managed%20Switch-lightgrey)
-![Status](https://img.shields.io/badge/Status-Implemented-brightgreen)
+![Category](https://img.shields.io/badge/Category-Network_Configuration-blue?style=for-the-badge)
+![Device](https://img.shields.io/badge/Device-Managed_Switch-lightgrey?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Implemented-brightgreen?style=for-the-badge)
 
 # VLAN Setup Guide
 
@@ -31,8 +31,8 @@ graph TB
         SW -->|"Port 3: Access (VLAN 10)"| TrustedHost1["Trusted Host A"]:::device
         SW -->|"Port 4: Access (VLAN 10)"| TrustedHost2["Trusted Host B"]:::device
         SW -->|"Port 5: Access (VLAN 40)"| FileServer["File Server"]:::device
-        SW -->|"Port 6: Access (VLAN 30)"| LabEndpoint["Lab Endpoint"]:::device
-        SW -->|"Port 7: Trunk (VLAN 50, 60)"| SegmentedAP["Segmented AP (IoT/Guest)"]:::device
+        SW -->|"Port 6: Access (VLAN 40)"| AppServer["Application Server"]:::device
+        SW -->|"Port 7: Trunk (VLAN 50)"| SegmentedAP["Segmented AP (IoT)"]:::device
         SW -->|"Port 8: Trunk (VLAN 10)"| TrustedAP["Trusted AP"]:::device
     end
     class Port_Assignments zone;
@@ -50,11 +50,11 @@ graph TB
 | :--- | :--- | :--- | :--- | :--- |
 | **10** | `MAIN` | `192.168.10.0/24` | `192.168.10.1` | Workstations, laptops, daily devices |
 | **20** | `MGMT` | `192.168.20.0/24` | `192.168.20.1` | Firewall, switch, and AP management |
-| **30** | `LAB` | `192.168.30.0/24` | `192.168.30.1` | Security lab, VMs, attack testing |
-| **40** | `SERVERS` | `192.168.40.0/24` | `192.168.40.1` | NAS, file server, hosted services |
+| **40** | `SERVERS` | `192.168.40.0/24` | `192.168.40.1` | Self-hosted applications, dev hosting, file server |
 | **50** | `IOT` | `192.168.50.0/24` | `192.168.50.1` | Smart home devices, printers, cameras |
-| **60** | `GUEST` | `192.168.60.0/24` | `192.168.60.1` | Guest internet-only access |
-| **70** | `GAME_SERVER` | `192.168.70.0/24` | `192.168.70.1` | Game servers, strict ZTNA rules (Minecraft, etc.) |
+| **70** | `GAME_SERVER` | `192.168.70.0/24` | `192.168.70.1` | Game servers, strict ZTNA rules |
+
+Each gateway address is also the DNS resolver for its segment — there is no separate DNS host.
 
 ---
 
@@ -66,7 +66,7 @@ graph TB
 
 Add VLANs on the LAN parent interface (e.g., `igb1`, `ix0`):
 - **VLAN Tag:** `10`, **Description:** `VLAN10_MAIN`
-- Repeat for VLANs 20, 30, 40, 50, and 60.
+- Repeat for VLANs 20, 40, 50, and 70 — matching descriptions (`VLAN20_MGMT`, `VLAN40_SERVERS`, `VLAN50_IOT`, `VLAN70_GAME_SERVER`).
 
 > **Rationale:** Ensure the parent interface carries no untagged traffic to prevent VLAN hopping attacks.
 
@@ -102,7 +102,7 @@ Enable DHCP individually for each VLAN interface.
 The port connected to the edge firewall must carry all VLAN traffic tagged.
 
 - **Mode:** Trunk (Tag All)
-- **Tagged VLANs:** `10, 20, 30, 40, 50, 60`
+- **Tagged VLANs:** `10, 20, 40, 50, 70`
 - **Untagged VLAN:** None
 
 > **Rationale:** The trunk port acts as a single cable carrying multiple separated traffic lanes. VLAN tags are preserved end-to-end, allowing the firewall to enforce per-VLAN policies.
@@ -129,7 +129,7 @@ APs that map SSIDs to VLANs require a trunk port.
 
 - **Mode:** Trunk
 - **Native/Untagged VLAN:** `20` (management IP of the AP)
-- **Tagged VLANs:** `10` (trusted SSID), `50` (IoT SSID), `60` (guest SSID)
+- **Tagged VLANs:** `10` (trusted SSID), `50` (IoT SSID)
 
 ---
 
@@ -137,14 +137,16 @@ APs that map SSIDs to VLANs require a trunk port.
 
 | Port | Device / Connection | Mode | VLAN Assignment | Purpose |
 | :--- | :--- | :--- | :--- | :--- |
-| **TE1** | Edge Firewall Uplink | Trunk | Tagged: 10–60 | Inter-VLAN routing pipeline |
+| **TE1** | Edge Firewall Uplink | Trunk | Tagged: 10, 20, 40, 50, 70 | Inter-VLAN routing pipeline |
 | **TE2** | Proxmox Host | Trunk | Native 20, Tagged: 40, 70 | Hypervisor carrying Management, Servers, and Game Servers |
 | **TE3** | Trusted Host A | Access | VLAN 10 | Trust boundary for primary workstation |
 | **TE4** | Trusted Host B | Access | VLAN 10 | Trust boundary for secondary workstation |
 | **TE5** | File Server | Access | VLAN 40 | Controls access to sensitive data |
-| **TE6** | Lab Endpoint | Access | VLAN 30 | Isolates malware and testing traffic |
-| **TE7** | Segmented AP (IoT/Guest) | Trunk | Tagged: 50, 60 / Native: 20 | Separates IoT and guest Wi-Fi traffic |
+| **TE6** | Application Server | Access | VLAN 40 | Hosted services kept off the trusted user VLAN |
+| **TE7** | Segmented AP (IoT) | Trunk | Tagged: 50 / Native: 20 | Separates IoT Wi-Fi from trusted wireless |
 | **TE8** | Trusted AP | Trunk | Tagged: 10 / Native: 20 | Trusted Wi-Fi access |
+
+> **Note on the uplink trunk:** the firewall uplink must carry every VLAN that exists downstream. VLAN 70 is tagged on the hypervisor port (TE2), so it must also be tagged on TE1 — a trunk that omits a downstream VLAN produces traffic the switch can carry but the firewall can never route or inspect.
 
 ---
 
@@ -158,7 +160,7 @@ Assign static IPs to infrastructure devices via DHCP reservation for consistent 
 | **Switch** | `.2` | `192.168.20.2` |
 | **Access Points** | `.3`–`.5` | `192.168.20.3` |
 | **Servers** | `.10`–`.19` | `192.168.40.10` |
-| **Printers** | `.20`–`.29` | `192.168.50.20` |
+| **Printers** | `.10`–`.19` | `192.168.50.10` |
 | **Cameras** | `.30`+ | `192.168.50.31` |
 
 **Configured via:** `Status` → `DHCP Leases` → `Add Static Mapping`
@@ -174,7 +176,7 @@ After configuration, verify the following:
 - [ ] Confirm VLAN 10 and VLAN 50 can reach the internet.
 - [ ] Confirm IoT device (VLAN 50) cannot ping or connect to a VLAN 10 device.
 - [ ] Confirm DNS queries from VLAN 50 are answered by Unbound (not an external resolver).
-- [ ] Confirm management interfaces (VLAN 20) are not reachable from VLAN 50 or VLAN 60.
+- [ ] Confirm management interfaces (VLAN 20) are not reachable from VLAN 50 or VLAN 70.
 
 ---
 
