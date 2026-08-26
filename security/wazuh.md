@@ -12,7 +12,7 @@ This deployment demonstrates practical experience in building enterprise-grade s
 
 ## 🎯 High-Level Overview
 
-Wazuh is deployed as the central nervous system for threat detection across the lab infrastructure. It actively ingests logs, monitors file integrity, and provides vulnerability detection for the isolated VLANs, Virtual Machines, and the edge pfSense firewall.
+Wazuh is deployed as the central nervous system for threat detection across the lab infrastructure. It actively ingests logs, monitors file integrity, and provides vulnerability detection across the segmented VLANs and their virtual machines. Ingestion of the edge firewall's own `filterlog` stream is the next integration step — see [Log Analysis](./log-analysis/README.md) for the format work that precedes it.
 
 ### Key Achievements
 * **Enterprise Hardening:** Achieved a **92% CIS (Center for Internet Security) Level 2 Server score** on the underlying OS.
@@ -35,17 +35,17 @@ graph TD
     classDef vm fill:#2b2b2b,stroke:#ff9900,stroke-width:2px,color:#ffffff
 
     subgraph "Threat Detection & Response"
-        WAZUH["Wazuh SIEM Manager\n(Ubuntu Server Pro)"]:::siem
+        WAZUH["Wazuh SIEM Manager<br/>(Ubuntu Server Pro)"]:::siem
     end
 
     subgraph "Log Sources & Agents"
         FW["pfSense Edge Firewall"]:::fw
-        AUTH["Authentik IdP\n(VLAN 20)"]:::vm
-        GAME["Minecraft Server\n(VLAN 70 ZTNA)"]:::vm
-        HONEY["Honeypot\n(Future Deployment)"]:::vm
+        AUTH["Authentik IdP<br/>(VLAN 20)"]:::vm
+        GAME["Game Server Node<br/>(VLAN 70 ZTNA)"]:::vm
+        HONEY["Honeypot<br/>(Future Deployment)"]:::vm
     end
 
-    FW -.->|"Syslog Forwarding\n(Planned)"| WAZUH
+    FW -.->|"Syslog Forwarding<br/>(Planned)"| WAZUH
     AUTH -->|"Agent: OSSEC TCP 1514/1515"| WAZUH
     GAME -->|"Agent: OSSEC TCP 1514/1515"| WAZUH
     HONEY -.->|"Threat Intel Feed"| WAZUH
@@ -61,7 +61,7 @@ By deploying and managing Wazuh in this lab environment, I have developed and pr
 2. **Vulnerability Detection (CVEs):** Utilizing the Wazuh Vulnerability Detector module to identify unpatched software across monitored VMs.
 3. **File Integrity Monitoring (FIM):** Tracking unauthorized modifications to critical system files (`/etc`, `/var`, `/bin`) on the host machines.
 4. **Compliance Management:** Validating endpoint configurations against PCI-DSS, GDPR, and CIS benchmarks natively through Wazuh dashboards.
-5. **Custom Log Parsing (Roadmap):** Developing custom decoders and alerting rules to specifically interpret pfSense firewall drops and custom application logs (e.g., Minecraft authentication attempts).
+5. **Custom Log Parsing (Roadmap):** Developing custom decoders and alerting rules to specifically interpret pfSense firewall drops and custom application logs (e.g. game server authentication attempts).
 
 ---
 

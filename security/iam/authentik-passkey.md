@@ -14,7 +14,7 @@ Authentik is hosted as a virtual machine on **Ubuntu Server Pro** within the iso
 
 ### DNS & TLS Certificate Routing
 To ensure secure communication between internal services without exposing them to the internet, traffic is routed locally using pfSense:
-* **Local DNS Overrides:** Configured in pfSense to resolve internal hostnames (e.g., `auth.local.domain`, `pve.local.domain`) to their respective VLAN 20 IP addresses.
+* **Local DNS Overrides:** Configured in pfSense to resolve internal hostnames (illustrated here as `auth.local.domain` and `pve.local.domain`) to their respective VLAN 20 addresses. Because the firewall is also the resolver for every segment, these names resolve identically on the LAN and over the VPN — one URL everywhere, with no split-horizon configuration to maintain.
 * **pfSense CA Certificates:** Self-signed or locally trusted certificates managed by the pfSense Certificate Authority are deployed to Authentik and Proxmox to secure OIDC exchanges over HTTPS.
 
 > **Security Rationale:** Relying on local DNS overrides and internal CA certificates ensures that authentication traffic never traverses the public internet, preventing interception while maintaining strict TLS encryption standards internally.
