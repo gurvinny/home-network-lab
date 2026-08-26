@@ -35,13 +35,13 @@ This document details the firewall rules applied to the LAN interface (VLAN 10 �
 
 **Management lockdown by named alias.** The `Grv_Trusted_Devices` alias controls administrative access using specific device IPs — not subnet-level trust. This means a device on VLAN 10 that is not in the alias group cannot reach the pfSense web UI even though it is on the "trusted" VLAN.
 
-**The administrative alias crosses every segment — deliberately.** Rule 1 is not only a management-portal allow. The same named alias is permitted to reach every VLAN in the lab, which makes it the single documented exception to the default-deny posture described in [`segmentation-policy.md`](./segmentation-policy.md).
+**Administrative reach is granted by alias, not by VLAN.** Rule 1 is the pattern the whole ruleset depends on: elevated access is attached to a named, enumerable set of devices rather than inherited from sitting on the "trusted" network. It is the documented exception to the default-deny posture in [`segmentation-policy.md`](./segmentation-policy.md).
 
 That is a real trade-off, and it is stated rather than hidden:
 
 - **Why it exists:** segmentation with no break-glass path produces shadow workarounds. An administrator locked out of their own management plane eventually opens a wider hole than a small, enumerable alias.
 - **Why it is acceptable:** membership is a fixed list of specific devices, not a subnet or a VLAN. Every other host on VLAN 10 — the "trusted" network — is still subject to full inter-VLAN policy.
-- **How the risk is managed:** compromise of an alias member bypasses segmentation, so management interfaces sit behind OIDC single sign-on with passkey enforcement, and traffic sourced from the alias is monitored in the SIEM.
+- **How the risk is managed:** an alias member is the highest-value target on the network, so management interfaces sit behind OIDC single sign-on with passkey enforcement, and traffic sourced from the alias is monitored in the SIEM.
 
 **Rule ordering is critical.** pfSense evaluates rules top-down, first-match-wins. The admin allow rule (Rule 1) must precede the management block rule (Rule 9) — otherwise the allow never fires.
 
