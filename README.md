@@ -353,3 +353,9 @@ This lab demonstrates real-world defensive networking principles found in enterp
 ## Contact
 
 Open to collaboration, security discussions, and infrastructure design conversations.
+
+---
+
+<sub>Part of a security portfolio &mdash; see
+[gurvinny/security-analyst-portfolio](https://github.com/gurvinny/security-analyst-portfolio)
+for the investigations, detection logic and incident-response playbooks that accompany this lab.</sub>
