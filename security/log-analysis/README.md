@@ -203,7 +203,7 @@ pfSense `filterlog` logs are well-suited for SIEM ingestion:
 **Planned SIEM enhancements:**
 - GeoIP tagging on all inbound WAN block events.
 - Automated VirusTotal lookup for any source IP exceeding 50 blocked events per hour.
-- Correlation rule: more than 10 unique IPs from the same /24 targeting port 3389 within 60 minutes fires a medium-severity RDP cluster alert.
+- Correlation rule: 5 or more unique IPs from the same /24 targeting port 3389 within 60 minutes fires a medium-severity RDP cluster alert.
 - Correlation rule: single source IP hitting more than 50 unique destination ports within 30 minutes fires a high-severity port sweep alert.
 - Cross-log correlation with Unbound DNS query logs and authentication events.
 
