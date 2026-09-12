@@ -359,3 +359,11 @@ Open to collaboration, security discussions, and infrastructure design conversat
 <sub>Part of a security portfolio &mdash; see
 [gurvinny/security-analyst-portfolio](https://github.com/gurvinny/security-analyst-portfolio)
 for the investigations, detection logic and incident-response playbooks that accompany this lab.</sub>
+
+---
+
+## Contributions
+
+This repository is published as a record of completed work, not as a collaborative project.
+Issues are disabled and pull requests are not reviewed or merged. Corrections, broken links and
+security concerns are welcome — see [SECURITY.md](SECURITY.md) for how to report them.
