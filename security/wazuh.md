@@ -12,7 +12,7 @@ This deployment demonstrates practical experience in building enterprise-grade s
 
 ## 🎯 High-Level Overview
 
-Wazuh is deployed as the central nervous system for threat detection across the lab infrastructure. It actively ingests logs, monitors file integrity, and provides vulnerability detection across the segmented VLANs and their virtual machines. Ingestion of the edge firewall's own `filterlog` stream is the next integration step — see [Log Analysis](./log-analysis/README.md) for the format work that precedes it.
+Wazuh is deployed as the central nervous system for threat detection across the lab infrastructure. It actively ingests logs, monitors file integrity, and provides vulnerability detection across the segmented VLANs and their virtual machines. The edge firewall's `filterlog` stream is ingested natively, with 15 custom rules layered on top of the built-in pfSense decoders. See [Log Analysis](./log-analysis/README.md) for the format work behind it.
 
 ### Key Achievements
 * **Enterprise Hardening:** Achieved a **92% CIS (Center for Internet Security) Level 2 Server score** on the underlying OS.
@@ -42,14 +42,29 @@ graph TD
         FW["pfSense Edge Firewall"]:::fw
         AUTH["Authentik IdP<br/>(VLAN 20)"]:::vm
         GAME["Game Server Node<br/>(VLAN 70 ZTNA)"]:::vm
+        WKS["Windows Workstation<br/>(Trusted LAN)"]:::vm
         HONEY["Honeypot<br/>(Future Deployment)"]:::vm
     end
 
-    FW -.->|"Syslog Forwarding<br/>(Planned)"| WAZUH
+    FW -->|"Syslog: filterlog + DNS"| WAZUH
     AUTH -->|"Agent: OSSEC TCP 1514/1515"| WAZUH
     GAME -->|"Agent: OSSEC TCP 1514/1515"| WAZUH
+    WKS -->|"Agent: OSSEC TCP 1514/1515"| WAZUH
     HONEY -.->|"Threat Intel Feed"| WAZUH
 ```
+
+### Agent coverage
+
+Agents are enrolled across both operating system families, so detection logic is exercised
+against Windows Security event logs as well as Linux `auditd` and file integrity monitoring:
+
+| Platform | Enrolled | Primary telemetry |
+| :--- | :--- | :--- |
+| Linux servers | Yes | File integrity monitoring, `auditd`, security configuration assessment |
+| Windows workstation | Yes | Windows Security, System and Application event logs |
+| pfSense edge firewall | Agentless, syslog | Firewall and DNS logs, parsed by the native decoders plus 15 custom rules |
+
+Host identifiers and addresses are deliberately omitted from this repository.
 
 ---
 

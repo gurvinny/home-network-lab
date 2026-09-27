@@ -330,7 +330,7 @@ This lab showcases practical experience with:
 | **Done** | Identity provider — Authentik OIDC SSO with passkey-enforced hypervisor access |
 | **Done** | Game server ZTNA — isolated VLAN 70 node with a segmented control plane |
 | **Done** | Dev server web app hosting — Next.js and Vite local deployments |
-| Planned | pfSense syslog forwarding into Wazuh with custom decoders |
+| **Done** | pfSense syslog forwarding into Wazuh, native decoders plus 15 custom rules |
 | Planned | Threat intel enrichment — AbuseIPDB / VirusTotal IP reputation |
 | Planned | Detection rules — scan detection, anomaly correlation |
 | Planned | IDS/IPS — Suricata for inline threat detection |
